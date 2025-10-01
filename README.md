@@ -638,3 +638,11 @@ If you find uisentinel helpful, please star the repository to help others discov
 **Built with ❤️ for AI agents and the developers who use them**
 
 *"The best UI is one that works for everyone, and can be verified automatically."*
+
+---
+
+### 🤝 Built With AI Collaboration
+
+This project was developed through collaboration with **VS Code GitHub Copilot** (powered by **Claude Sonnet 4.5**) - a practical demonstration of building tools for AI agents, with AI agents. The irony is not lost on us! 🎯
+
+From architecture to implementation, testing to documentation, this project showcases what's possible when developers work alongside advanced AI coding assistants.
