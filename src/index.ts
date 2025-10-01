@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { ServerManager } from './server-manager';
 import { BrowserEngine } from './browser-engine';
 import { VisualDiff } from './visual-diff';
@@ -77,6 +78,23 @@ export class UISentinel {
 
     const result = await this.browserEngine.capture(captureOptions);
     const suggestions = this.generateSuggestions(result);
+
+    // Generate markdown report if name is provided
+    if (captureOptions.name) {
+      const reportContent = this.browserEngine.generateCaptureReport(
+        captureOptions,
+        result.screenshots,
+        result.accessibility
+      );
+      
+      if (reportContent) {
+        const reportPath = path.join(
+          this.config.output.directory,
+          `${captureOptions.name}.md`
+        );
+        fs.writeFileSync(reportPath, reportContent);
+      }
+    }
 
     return {
       status: suggestions.length === 0 ? 'success' : 'warning',

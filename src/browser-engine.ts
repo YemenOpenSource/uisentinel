@@ -115,6 +115,128 @@ export class BrowserEngine {
   }
 
   /**
+   * Generate markdown report for interactive capture
+   */
+  generateCaptureReport(
+    options: CaptureOptions,
+    screenshots: ScreenshotResult[],
+    accessibility?: AccessibilityResult
+  ): string {
+    if (!options.name) {
+      return ''; // No report if no name provided
+    }
+
+    const lines: string[] = [];
+    
+    // Header
+    lines.push(`# ${this.humanizeName(options.name)}`);
+    lines.push('');
+    
+    // Description
+    if (options.description) {
+      lines.push(`> ${options.description}`);
+      lines.push('');
+    }
+    
+    // Metadata
+    lines.push('## 📋 Test Information');
+    lines.push('');
+    lines.push(`- **Test Name**: \`${options.name}\``);
+    lines.push(`- **URL**: ${options.url}`);
+    lines.push(`- **Timestamp**: ${new Date().toISOString()}`);
+    lines.push(`- **Viewports**: ${screenshots.map(s => s.viewport).join(', ')}`);
+    lines.push('');
+    
+    // Actions
+    if (options.actions && options.actions.length > 0) {
+      lines.push('## 🎬 Actions Performed');
+      lines.push('');
+      options.actions.forEach((action, index) => {
+        lines.push(`${index + 1}. ${this.describeAction(action)}`);
+      });
+      lines.push('');
+    }
+    
+    // Results
+    lines.push('## 📊 Results');
+    lines.push('');
+    
+    // Accessibility
+    if (accessibility) {
+      lines.push(`### ♿ Accessibility Score: ${accessibility.score}/100`);
+      lines.push('');
+      if (accessibility.violations.length === 0) {
+        lines.push('✅ **No accessibility violations found!**');
+      } else {
+        lines.push(`⚠️ **${accessibility.violations.length} violation(s) found:**`);
+        lines.push('');
+        accessibility.violations.forEach((violation, index) => {
+          lines.push(`#### ${index + 1}. ${violation.description}`);
+          lines.push(`- **Impact**: ${violation.impact}`);
+          lines.push(`- **Affected Elements**: ${violation.nodes.length}`);
+          if (violation.nodes.length > 0) {
+            lines.push(`- **Example**: \`${violation.nodes[0].html}\``);
+          }
+          lines.push('');
+        });
+      }
+      lines.push('');
+    }
+    
+    // Screenshots
+    lines.push('## 📸 Screenshots');
+    lines.push('');
+    screenshots.forEach(screenshot => {
+      const filename = path.basename(screenshot.path);
+      lines.push(`### ${screenshot.viewport} (${screenshot.width}x${screenshot.height})`);
+      lines.push(`![${screenshot.viewport}](screenshots/${filename})`);
+      lines.push('');
+    });
+    
+    return lines.join('\n');
+  }
+
+  /**
+   * Convert snake_case to Title Case
+   */
+  private humanizeName(name: string): string {
+    return name
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  /**
+   * Generate human-readable description of an action
+   */
+  private describeAction(action: Action): string {
+    switch (action.type) {
+      case 'click':
+        return `**Click** on \`${action.selector}\``;
+      case 'hover':
+        return `**Hover** over \`${action.selector}\``;
+      case 'fill':
+        return `**Fill** \`${action.selector}\` with "${action.value}"`;
+      case 'type':
+        return `**Type** "${action.text}" into \`${action.selector}\`${action.delay ? ` (delay: ${action.delay}ms)` : ''}`;
+      case 'scroll':
+        return action.selector 
+          ? `**Scroll** to \`${action.selector}\``
+          : `**Scroll** by ${action.x || 0}px, ${action.y || 0}px`;
+      case 'wait':
+        return action.selector
+          ? `**Wait** for \`${action.selector}\``
+          : `**Wait** ${action.duration}ms`;
+      case 'press':
+        return `**Press** key "${action.key}"`;
+      case 'select':
+        return `**Select** "${action.value}" in \`${action.selector}\``;
+      default:
+        return `**Unknown action**: ${JSON.stringify(action)}`;
+    }
+  }
+
+  /**
    * Take a screenshot
    */
   private async takeScreenshot(page: Page, viewport: Viewport, url: string, namePrefix?: string): Promise<string> {

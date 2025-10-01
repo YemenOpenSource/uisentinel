@@ -79,9 +79,9 @@ program
       await nb.start();
       
       if (actions.length > 0) {
-        spinner.text = `Capturing \${options.url} with \${actions.length} action(s)...`;
+        spinner.text = `Capturing ${options.url} with ${actions.length} action(s)...`;
       } else {
-        spinner.text = `Capturing \${options.url}...`;
+        spinner.text = `Capturing ${options.url}...`;
       }
       
       const result = await nb.capture({
