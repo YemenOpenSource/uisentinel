@@ -24,42 +24,103 @@ program
   .option('--full-page', 'Capture full page', true)
   .option('--open', 'Open screenshots after capture', false)
   .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--name <name>', 'Snake_case name for output files (e.g., mobile_menu_open)')
+  .option('--description <desc>', 'Description of what you are testing')
+  .option('--click <selector>', 'Click element before capture')
+  .option('--hover <selector>', 'Hover element before capture')
+  .option('--fill <selector:value>', 'Fill input before capture (format: selector:value)')
+  .option('--scroll-to <selector>', 'Scroll to element before capture')
+  .option('--wait <ms>', 'Wait duration in ms before capture')
+  .option('--actions <json>', 'JSON array of actions to execute')
   .action(async (options) => {
     const spinner = ora('Initializing...').start();
     try {
+      // Validate name format (snake_case)
+      if (options.name && !/^[a-z0-9_]+$/.test(options.name)) {
+        spinner.fail('Invalid name format');
+        console.error(chalk.red('❌ Error: --name must be snake_case (lowercase letters, numbers, underscores only)'));
+        console.error(chalk.gray('   Example: mobile_menu_open, contact_modal_visible'));
+        process.exit(1);
+      }
+
+      // Parse actions from CLI options
+      const actions: any[] = [];
+
+      if (options.actions) {
+        try {
+          const parsedActions = JSON.parse(options.actions);
+          actions.push(...parsedActions);
+        } catch (error) {
+          spinner.fail('Invalid JSON in --actions');
+          console.error(chalk.red('❌ Error parsing --actions JSON'));
+          process.exit(1);
+        }
+      } else {
+        if (options.click) actions.push({ type: 'click', selector: options.click });
+        if (options.hover) actions.push({ type: 'hover', selector: options.hover });
+        if (options.fill) {
+          const [selector, value] = options.fill.split(':');
+          if (!selector || !value) {
+            spinner.fail('Invalid --fill format');
+            console.error(chalk.red('❌ Error: --fill must be in format selector:value'));
+            process.exit(1);
+          }
+          actions.push({ type: 'fill', selector, value });
+        }
+        if (options.scrollTo) actions.push({ type: 'scroll', selector: options.scrollTo });
+        if (options.wait) actions.push({ type: 'wait', duration: parseInt(options.wait) });
+      }
+
       const nb = new UISentinel({
         output: { directory: options.output, format: 'json' },
         headless: !options.open,
       });
       spinner.text = 'Starting browser...';
       await nb.start();
-      spinner.text = `Capturing \${options.url}...`;
+      
+      if (actions.length > 0) {
+        spinner.text = `Capturing \${options.url} with \${actions.length} action(s)...`;
+      } else {
+        spinner.text = `Capturing \${options.url}...`;
+      }
+      
       const result = await nb.capture({
         url: options.url,
         viewports: options.viewports.split(','),
         accessibility: options.a11y,
         layoutAnalysis: options.layout,
         fullPage: options.fullPage,
+        name: options.name,
+        description: options.description,
+        actions: actions.length > 0 ? actions : undefined,
       });
       spinner.succeed('Capture complete!');
+      
+      if (options.name) {
+        console.log(chalk.bold(`\n📝 Name: ${options.name}`));
+      }
+      if (options.description) {
+        console.log(chalk.gray(`   ${options.description}`));
+      }
+      
       console.log(chalk.bold('\n📸 Screenshots:'));
       result.screenshots.forEach(s => {
-        console.log(chalk.gray(`  \${s.viewport}: \${s.path}`));
+        console.log(chalk.gray(`  ${s.viewport}: ${s.path}`));
       });
       if (result.accessibility) {
         console.log(chalk.bold('\n♿ Accessibility:'));
-        console.log(`  Score: \${result.accessibility.score}/100`);
-        console.log(`  Violations: \${result.accessibility.violations.length}`);
+        console.log(`  Score: ${result.accessibility.score}/100`);
+        console.log(`  Violations: ${result.accessibility.violations.length}`);
       }
       if (result.suggestions.length > 0) {
         console.log(chalk.bold('\n💡 Suggestions:'));
         result.suggestions.forEach(s => {
-          console.log(chalk.yellow(`  • \${s}`));
+          console.log(chalk.yellow(`  • ${s}`));
         });
       }
       const reportPath = path.join(options.output, 'report.json');
       fs.writeFileSync(reportPath, JSON.stringify(result, null, 2));
-      console.log(chalk.gray(`\n📄 Report saved to \${reportPath}`));
+      console.log(chalk.gray(`\n📄 Report saved to ${reportPath}`));
       await nb.close();
     } catch (error: any) {
       spinner.fail('Failed to capture');

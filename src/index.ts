@@ -68,6 +68,9 @@ export class UISentinel {
       fullPage: options.fullPage ?? this.config.screenshot.fullPage,
       waitForSelector: options.waitForSelector,
       waitForTimeout: options.waitForTimeout || this.config.timeout,
+      name: options.name,
+      description: options.description,
+      actions: options.actions,
     };
 
     console.log(`📸 Capturing ${captureOptions.url}...`);
