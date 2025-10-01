@@ -10,7 +10,9 @@ import {
   AccessibilityResult,
   LayoutAnalysis,
   CaptureOptions,
+  Action,
 } from './types';
+import { InteractionEngine } from './interaction-engine';
 
 /**
  * Handles browser automation and visual capture
@@ -75,9 +77,16 @@ export class BrowserEngine {
           });
         }
 
+        // NEW: Execute interactive actions before capture
+        if (options.actions && options.actions.length > 0) {
+          const interactionEngine = new InteractionEngine(page);
+          await interactionEngine.executeSequence(options.actions);
+        }
+
         // Take screenshot
         if (options.screenshot !== false) {
-          const screenshotPath = await this.takeScreenshot(page, viewport, options.url);
+          const namePrefix = options.name || this.generateNameFromUrl(options.url);
+          const screenshotPath = await this.takeScreenshot(page, viewport, options.url, namePrefix);
           screenshots.push({
             viewport: this.getViewportName(viewport),
             path: screenshotPath,
@@ -108,11 +117,11 @@ export class BrowserEngine {
   /**
    * Take a screenshot
    */
-  private async takeScreenshot(page: Page, viewport: Viewport, url: string): Promise<string> {
+  private async takeScreenshot(page: Page, viewport: Viewport, url: string, namePrefix?: string): Promise<string> {
     const timestamp = Date.now();
     const viewportName = this.getViewportName(viewport);
-    const sanitizedUrl = url.replace(/[^a-z0-9]/gi, '_');
-    const filename = `${sanitizedUrl}_${viewportName}_${timestamp}.png`;
+    const prefix = namePrefix || this.generateNameFromUrl(url);
+    const filename = `${prefix}_${viewportName}_${timestamp}.png`;
     const screenshotPath = path.join(this.outputDir, 'screenshots', filename);
 
     fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
@@ -123,6 +132,22 @@ export class BrowserEngine {
     });
 
     return screenshotPath;
+  }
+
+  /**
+   * Generate snake_case name from URL
+   */
+  private generateNameFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      let name = urlObj.pathname.replace(/^\/|\/$/g, '').replace(/\//g, '_');
+      if (!name || name === '') {
+        name = 'home';
+      }
+      return name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    } catch {
+      return url.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    }
   }
 
   /**

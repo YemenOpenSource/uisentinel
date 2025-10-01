@@ -127,6 +127,67 @@ export interface UISentinelConfig {
   routes?: string[];
 }
 
+// Interactive Action Types
+export interface ActionClick {
+  type: 'click';
+  selector: string;
+  button?: 'left' | 'right' | 'middle';
+  clickCount?: number;
+}
+
+export interface ActionHover {
+  type: 'hover';
+  selector: string;
+  duration?: number;
+}
+
+export interface ActionFill {
+  type: 'fill';
+  selector: string;
+  value: string;
+}
+
+export interface ActionType {
+  type: 'type';
+  selector: string;
+  text: string;
+  delay?: number;
+}
+
+export interface ActionScroll {
+  type: 'scroll';
+  selector?: string;
+  x?: number;
+  y?: number;
+}
+
+export interface ActionWait {
+  type: 'wait';
+  selector?: string;
+  duration?: number;
+}
+
+export interface ActionPress {
+  type: 'press';
+  key: string;
+}
+
+export interface ActionSelect {
+  type: 'select';
+  selector: string;
+  value: string;
+}
+
+export type Action = 
+  | ActionClick
+  | ActionHover
+  | ActionFill
+  | ActionType
+  | ActionScroll
+  | ActionWait
+  | ActionPress
+  | ActionSelect;
+
 export interface CaptureOptions {
   url: string;
   viewports?: ViewportPreset[] | Viewport[];
@@ -136,6 +197,10 @@ export interface CaptureOptions {
   fullPage?: boolean;
   waitForSelector?: string;
   waitForTimeout?: number;
+  // Interactive capture options
+  name?: string;
+  description?: string;
+  actions?: Action[];
 }
 
 export interface FrameworkDetectionResult {
