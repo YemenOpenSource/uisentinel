@@ -456,64 +456,14 @@ This chat mode teaches the agent to:
 - [ ] 🚧 **Annotation tools** - Mark up screenshots with notes
 - [ ] 🚧 **Video recording** - Capture user interactions
 - [ ] 🚧 **Animation capture** - Record CSS/JS animations
-- [ ] 🚧 **PDF generation** - Export validation reports as PDF
-- [ ] 🚧 **Multi-page flows** - Capture entire user journeys
-- [ ] 🚧 **Responsive timeline** - Show viewport changes over time
-
-### 🎨 Visual Analysis Enhancements
-- [ ] 🚧 **AI visual description** - GPT-4 Vision describes what's on screen
-- [ ] 🚧 **Component detection** - Auto-identify UI components
-- [ ] 🚧 **Design system validation** - Check against style guide
-- [ ] 🚧 **Typography analysis** - Font size, weight, hierarchy checks
-- [ ] 🚧 **Spacing validation** - Consistent padding/margins
-- [ ] 🚧 **Color palette extraction** - Detect all colors used
-- [ ] 🚧 **Shadow analysis** - Validate elevation system
-- [ ] 🚧 **Grid alignment** - Check pixel-perfect alignment
-- [ ] 🚧 **Icon consistency** - Verify icon sizes and styles
-- [ ] 🚧 **Brand compliance** - Match against brand guidelines
-
-### ⚡ Performance & Metrics
-- [ ] 🚧 **Core Web Vitals** - LCP, FID, CLS measurement
-- [ ] 🚧 **Lighthouse integration** - Full performance audits
-- [ ] 🚧 **Bundle size tracking** - Monitor JavaScript/CSS size
-- [ ] 🚧 **Image optimization** - Detect unoptimized images
-- [ ] 🚧 **Lazy loading detection** - Verify performance optimizations
-- [ ] 🚧 **Network waterfall** - Request timing visualization
-- [ ] 🚧 **Memory profiling** - Detect memory leaks
-- [ ] 🚧 **CPU profiling** - Identify performance bottlenecks
-
-### ♿ Accessibility Enhancements
-- [ ] 🚧 **Screen reader testing** - Automated VoiceOver/NVDA tests
-- [ ] 🚧 **Keyboard navigation** - Tab order validation
-- [ ] 🚧 **Focus management** - Visual focus indicator checks
-- [ ] 🚧 **ARIA validation** - Advanced ARIA pattern checks
-- [ ] 🚧 **Color blindness simulation** - Test all colorblindness types
-- [ ] 🚧 **Magnification testing** - Verify 200% zoom support
-- [ ] 🚧 **Motion sensitivity** - Detect problematic animations
-- [ ] 🚧 **Reading level** - Content readability scoring
 
 ### 🔄 Testing & CI/CD
 - [ ] 🚧 **GitHub Actions** - Official action for CI/CD
 - [ ] 🚧 **GitLab CI** - Native GitLab integration
-- [ ] 🚧 **Jenkins plugin** - Enterprise CI integration
-- [ ] 🚧 **CircleCI orb** - CircleCI integration
-- [ ] 🚧 **Azure Pipelines** - Microsoft DevOps integration
-- [ ] 🚧 **Baseline management** - Smart baseline updates
 - [ ] 🚧 **Visual regression** - Enhanced diffing algorithms
 - [ ] 🚧 **Test reporting** - Beautiful HTML reports
 - [ ] 🚧 **Parallel testing** - Multi-browser parallel runs
 
-### 🧹 Developer Experience
-- [ ] 🚧 **VSCode extension** - Inline validation results
-- [ ] 🚧 **Browser DevTools** - Chrome extension integration
-- [ ] 🚧 **Watch mode** - Auto-validate on file changes
-- [ ] 🚧 **Configuration UI** - Web-based config generator
-- [ ] 🚧 **Interactive CLI** - Guided validation setup
-- [ ] 🚧 **Hot reload** - Fast incremental validation
-- [ ] 🚧 **Smart caching** - Skip unchanged routes
-- [ ] 🚧 **Progress indicators** - Real-time validation status
-- [ ] 🚧 **Error recovery** - Graceful failure handling
-- [ ] 🚧 **Debug mode** - Verbose logging for troubleshooting
 
 ### 🌐 Web Framework Support
 - [x] ✅ **Next.js** - Full support (pages & app router)
@@ -523,12 +473,6 @@ This chat mode teaches the agent to:
 - [x] ✅ **Angular** - Full support
 - [x] ✅ **SvelteKit** - Full support
 - [x] ✅ **Astro** - Full support
-- [ ] 🚧 **Nuxt.js** - Vue 3 meta-framework
-- [ ] 🚧 **Remix** - React meta-framework
-- [ ] 🚧 **Gatsby** - Static site generator
-- [ ] 🚧 **Docusaurus** - Documentation sites
-- [ ] 🚧 **Storybook** - Component validation
-- [ ] 🚧 **Qwik** - Resumable framework
 
 ### 📱 Platform Expansion (Future)
 - [ ] 🔮 **iOS Native** - Swift/SwiftUI validation
@@ -574,7 +518,6 @@ This chat mode teaches the agent to:
 ### For Developers
 - 🚀 **[Quick Start Guide](./docs/quick-start.md)** - Get up and running in 5 minutes
 - 📖 **[API Documentation](./docs/api.md)** - Complete API reference
-- 💻 **[CLI Reference](./docs/cli-reference.md)** - All command-line options
 - 🎨 **[Framework Examples](./docs/framework-examples.md)** - Integration examples
 - 🔧 **[Configuration Guide](./docs/configuration.md)** - Advanced configuration
 
