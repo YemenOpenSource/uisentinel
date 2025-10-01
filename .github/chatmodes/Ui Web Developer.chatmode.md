@@ -432,17 +432,6 @@ Add these to `package.json`:
 }
 ```
 
----
-
-## 📚 Additional Resources
-
-### Quick Links
-
-- 📖 [Full Documentation](../README.md)
-- 🚀 [Quick Start Guide](quick-start.md)
-- 📚 [API Reference](api.md)
-- 🎯 [Code Examples](../examples/complete-example.js)
-
 ### Example Commands
 
 ```bash
