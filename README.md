@@ -444,13 +444,9 @@ This chat mode teaches the agent to:
 - [x] ✅ **GitHub Copilot** - Complete chat mode integration
 - [ ] 🚧 **Claude Code (Anthropic)** - Native Claude Desktop integration
 - [ ] 🚧 **Cursor** - `.cursorrules` templates and commands
-- [ ] 🚧 **Codeium** - Autocomplete and chat integration
-- [ ] 🚧 **Cody (Sourcegraph)** - Context-aware validation
-- [ ] 🚧 **Continue.dev** - VSCode extension integration
-- [ ] 🚧 **Tabnine** - AI validation suggestions
-- [ ] 🚧 **Amazon Q** - AWS-integrated validation
+- [ ] 🚧 **Codeium** - Autocomplete and 
 - [ ] 🚧 **Gemini Code Assist** - Google AI integration
-- [ ] 🚧 **Replit AI** - Online IDE integration
+
 
 ### 📸 Advanced Capture Features
 - [ ] 🚧 **Interactive screenshots** - Click, scroll, hover captures
@@ -633,8 +629,8 @@ If you find uisentinel helpful, please star the repository to help others discov
 
 ## 💬 Community
 
-- **Issues**: Found a bug? [Open an issue](https://github.com/yourusername/uisentinel/issues)
-- **Discussions**: Have ideas? [Start a discussion](https://github.com/yourusername/uisentinel/discussions)
+- **Issues**: Found a bug? [Open an issue](https://github.com/mhjabreel/uisentinel/issues)
+- **Discussions**: Have ideas? [Start a discussion](https://github.com/mhjabreel/uisentinel/discussions)
 - **Twitter**: Follow for updates [@uisentinel](https://twitter.com/uisentinel)
 
 ---
