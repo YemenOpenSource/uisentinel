@@ -13,6 +13,7 @@ import {
   Action,
 } from './types';
 import { InteractionEngine } from './interaction-engine';
+import { AdvancedCapture } from './advanced-capture';
 
 /**
  * Handles browser automation and visual capture
@@ -383,6 +384,45 @@ export class BrowserEngine {
       viewport,
       ...analysis,
     };
+  }
+
+  /**
+   * Get advanced capture instance for a specific URL
+   * Use this for element-specific captures, clipping, zoom, etc.
+   * 
+   * @example
+   * ```js
+   * const page = await engine.createPage(url);
+   * const advCapture = engine.getAdvancedCapture(page);
+   * await advCapture.captureElement({ selector: '#hero', path: 'hero.png' });
+   * await page.close();
+   * ```
+   */
+  getAdvancedCapture(page: Page): AdvancedCapture {
+    return new AdvancedCapture(page, this.outputDir);
+  }
+
+  /**
+   * Create a new page with specific viewport
+   * Useful for manual control with advanced capture
+   */
+  async createPage(url: string, viewport?: ViewportPreset | Viewport): Promise<Page> {
+    if (!this.browser) {
+      throw new Error('Browser not initialized. Call init() first.');
+    }
+
+    const resolvedViewport = viewport 
+      ? (typeof viewport === 'string' ? VIEWPORT_PRESETS[viewport] : viewport)
+      : VIEWPORT_PRESETS.desktop;
+
+    const page = await this.browser.newPage({
+      viewport: resolvedViewport,
+      deviceScaleFactor: resolvedViewport.deviceScaleFactor,
+    });
+
+    await page.goto(url, { waitUntil: 'networkidle' });
+
+    return page;
   }
 
   /**

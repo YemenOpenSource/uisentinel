@@ -2,31 +2,146 @@
 description: UI/UX Development with Visual Validation - Instructions for GitHub Copilot Agents
 ---
 
-# 🎨 UI/UX Development Agent Instructions
+# UI/UX Development Agent Instructions
 
-**Purpose**: These instructions enable GitHub Copilot agents to work as UI/UX developers would - with visual feedback, accessibility validation, and responsive design testing.
+**Purpose**: These instructions establish standardized procedures for UI/UX development that incorporate visual validation, accessibility compliance, and responsive design testing.
 
-## 🎯 Core Principle
+## Core Development Principle
 
-**NEVER complete a UI task without visual validation.**
+**Visual validation is mandatory for all UI development tasks.**
 
-When you build or modify user interfaces, you MUST:
-1. ✅ Generate/modify the code
-2. ✅ Validate visually using uisentinel
-3. ✅ Fix any reported issues (technical AND visual)
-4. ✅ Re-validate to confirm fixes
-5. ✅ Only then mark the task complete
+When developing or modifying user interfaces, adhere to the following workflow:
+1. Generate or modify code implementation
+2. Execute visual validation using UIsentinel
+3. Address all identified issues (technical and visual)
+4. Re-validate to confirm resolution
+5. Complete task only after validation passes
 
-**Critical Rule**: If screenshots show visual problems, those problems MUST be fixed regardless of technical validation scores.
+**Critical Requirement**: Visual defects identified in screenshots must be corrected regardless of technical validation scores.
 
 ---
 
-## 📋 Available Scripts & Commands
+## Standard UI Development Workflow
+
+### Workflow Steps
+
+```
+1. Receive UI task request
+   ↓
+2. Generate/modify code implementation
+   ↓
+3. Execute UIsentinel validation tools
+   ↓
+4. Review validation output and screenshots
+   ↓
+5. Issues identified?
+   ├─ YES → Apply corrections → Return to step 3
+   └─ NO → Task complete ✅
+```
+
+---
+
+## UIsentinel CLI Reference
+
+### Command Overview
+
+```bash
+Usage: uisentinel [options] [command]
+
+Visual validation toolkit for AI coding agents
+
+Options:
+  -V, --version           Output the version number
+  -h, --help              Display help for command
+
+Commands:
+  capture [options]       Capture screenshots and run validation
+  validate [options]      Validate entire project
+  diff [options]          Compare screenshots for visual regression
+  agent-report [options]  Generate agent-friendly validation report
+  init                    Initialize uisentinel configuration
+  help [command]          Display help for command
+```
+
+### Capture Command
+
+```bash
+Usage: uisentinel capture [options]
+
+Capture screenshots and run validation
+
+Options:
+  -u, --url <url>              URL to capture (default: "http://localhost:3000")
+  -v, --viewports <viewports>  Viewports (comma-separated) (default: "mobile,desktop")
+  --a11y                       Run accessibility checks (default: false)
+  --layout                     Run layout analysis (default: true)
+  --full-page                  Capture full page (default: true)
+  --open                       Open screenshots after capture (default: false)
+  -o, --output <dir>           Output directory (default: "./uisentinel-output")
+  --name <name>                Snake_case name for output files (e.g., mobile_menu_open)
+  --description <desc>         Description of what you are testing
+  --click <selector>           Click element before capture
+  --hover <selector>           Hover element before capture
+  --fill <selector:value>      Fill input before capture (format: selector:value)
+  --scroll-to <selector>       Scroll to element before capture
+  --wait <ms>                  Wait duration in ms before capture
+  --actions <json>             JSON array of actions to execute
+  -h, --help                   Display help for command
+```
+
+### Validate Command
+
+```bash
+Usage: uisentinel validate [options]
+
+Validate entire project
+
+Options:
+  -p, --project <path>   Project path (default: ".")
+  -r, --routes <routes>  Routes to validate (comma-separated) (default: "/")
+  -o, --output <dir>     Output directory (default: "./uisentinel-output")
+  --agent-mode           Output in agent-friendly format (default: false)
+  -h, --help             Display help for command
+```
+
+### Diff Command
+
+```bash
+Usage: uisentinel diff [options]
+
+Compare screenshots for visual regression
+
+Options:
+  -b, --baseline <path>      Baseline image path
+  -c, --current <path>       Current image path
+  -t, --threshold <percent>  Difference threshold (%) (default: "5")
+  -o, --output <dir>         Output directory (default: "./uisentinel-output")
+  -h, --help                 display help for command
+```
+
+### Agent Report Command
+
+```bash
+Usage: uisentinel agent-report [options]
+
+Generate agent-friendly validation report
+
+Options:
+  -p, --project <path>   Project path (default: ".")
+  -r, --routes <routes>  Routes to validate (comma-separated) (default: "/")
+  -f, --focus <areas>    Focus areas (comma-separated) (default: "accessibility,layout")
+  -o, --output <file>    Output file
+  -h, --help             Display help for command
+```
+
+---
+
+## Available Scripts & Commands
 
 ### Quick Reference
 
 ```bash
-# Full project validation (use this most often)
+# Full project validation (recommended for most use cases)
 npm run validate:ui
 
 # Quick accessibility check for a single page
@@ -38,7 +153,7 @@ npm run validate:regression
 # Generate detailed report
 npm run validate:report
 
-# Interactive capture - test dynamic UI states (NEW!)
+# Interactive capture - test dynamic UI states
 npx uisentinel capture --url http://localhost:3000 \
   --name modal_open \
   --description "Testing modal accessibility" \
@@ -47,22 +162,22 @@ npx uisentinel capture --url http://localhost:3000 \
   --a11y
 ```
 
-### Detailed Commands
+### Detailed Command Usage
 
-#### 1. **Full Project Validation** (Recommended)
+#### 1. Full Project Validation (Recommended)
 
 ```bash
 npx uisentinel validate --project . --agent-mode
 ```
 
-**When to use**: After creating/modifying any UI component
-**What it does**:
-- Auto-detects your framework (Next.js, Vite, React, etc.)
-- Starts dev server automatically
-- Captures screenshots at mobile, tablet, and desktop viewports
-- Runs WCAG 2.1 AA accessibility checks
-- Analyzes layout for overflows and issues
-- Returns structured report with actionable suggestions
+**Use case**: Post-implementation validation for any UI component
+**Capabilities**:
+- Framework auto-detection (Next.js, Vite, React, etc.)
+- Automatic dev server initialization
+- Multi-viewport screenshot capture (mobile, tablet, desktop)
+- WCAG 2.1 AA accessibility compliance checking
+- Layout overflow and positioning analysis
+- Structured reporting with actionable recommendations
 
 **Example Output**:
 ```markdown
@@ -85,51 +200,51 @@ npx uisentinel validate --project . --agent-mode
 - Set max-width: 100% on .hero-section for mobile
 ```
 
-#### 2. **Quick Accessibility Check**
+#### 2. Quick Accessibility Check
 
 ```bash
 npx uisentinel capture --url http://localhost:3000 --a11y
 ```
 
-**When to use**: Quick check during development
-**What it does**: Fast accessibility audit without full validation
+**Use case**: Rapid accessibility audit during development iteration
+**Capabilities**: Streamlined accessibility assessment without comprehensive validation
 
-#### 3. **Multi-Page Validation**
+#### 3. Multi-Page Validation
 
 ```bash
 npx uisentinel validate --project . --routes /,/about,/contact,/products
 ```
 
-**When to use**: Validating multiple pages at once
+**Use case**: Comprehensive validation across multiple application routes
 
-#### 4. **Custom Viewport Testing**
+#### 4. Custom Viewport Testing
 
 ```bash
 npx uisentinel capture --url http://localhost:3000 --viewports mobile,tablet,desktop
 ```
 
-**When to use**: Testing specific viewport combinations
+**Use case**: Targeted responsive design testing for specific viewport combinations
 
-#### 5. **Visual Regression Testing**
+#### 5. Visual Regression Testing
 
 ```bash
 npx uisentinel diff --baseline ./baselines/homepage.png --current ./screenshots/current.png
 ```
 
-**When to use**: Checking for unintended visual changes
+**Use case**: Detection of unintended visual modifications between versions
 
-#### 6. **Agent Report (Markdown)**
+#### 6. Agent Report Generation
 
 ```bash
 npx uisentinel agent-report --project . --focus accessibility,layout --output report.md
 ```
 
-**When to use**: Generating detailed reports for review
+**Use case**: Comprehensive documentation and review reporting
 
-#### 7. **Interactive Capture - Test Dynamic UI States** (NEW!)
+#### 7. Interactive Capture - Dynamic UI State Testing
 
 ```bash
-# Simple: Single action
+# Single action
 npx uisentinel capture \
   --url http://localhost:3000 \
   --name modal_open \
@@ -138,7 +253,7 @@ npx uisentinel capture \
   --wait 500 \
   --a11y
 
-# Advanced: Multiple actions
+# Multiple actions
 npx uisentinel capture \
   --url http://localhost:3000 \
   --name dropdown_keyboard \
@@ -151,16 +266,16 @@ npx uisentinel capture \
   --a11y
 ```
 
-**When to use**: Testing modals, dropdowns, tooltips, hover states, form validations
-**What it does**:
-- Executes browser actions (click, hover, scroll, type, wait)
-- Captures screenshots AFTER interactions
-- Validates accessibility in the interactive state
-- Generates markdown report with test documentation
+**Use case**: Testing interactive components (modals, dropdowns, tooltips, hover states, form validations)
+**Capabilities**:
+- Browser interaction execution (click, hover, scroll, type, wait)
+- Post-interaction screenshot capture
+- Accessibility validation in interactive states
+- Automated markdown report generation with test documentation
 
 **Supported Actions**:
 - `--click "selector"` - Click an element
-- `--hover "selector"` - Hover over an element  
+- `--hover "selector"` - Hover over an element
 - `--scroll-to "selector"` - Scroll to an element
 - `--wait <ms>` - Wait for specified milliseconds
 - `--actions '[...]'` - Multiple actions as JSON array
@@ -171,53 +286,53 @@ npx uisentinel capture \
 
 ---
 
-## 🎯 Element Accessibility for Interactive Testing
+## Element Accessibility for Interactive Testing
 
-### CRITICAL: Make Interactive Elements Targetable
+### Critical Requirement: Interactive Element Targeting
 
-When building UI components that will be tested with interactive capture, you MUST ensure elements can be easily targeted by selectors.
+All interactive UI components must be designed with clear, semantic selectors to enable automated testing.
 
 ### Element Identification Strategy
 
 **Priority Order for Selectors:**
 
-1. **Semantic HTML + ARIA** (Best - Accessible to all)
+1. **Semantic HTML + ARIA** (Best - Universally accessible)
    ```html
    <button aria-label="Open modal">Get Started</button>
    <!-- Target: button[aria-label="Open modal"] -->
-   
+
    <nav aria-label="Main navigation">...</nav>
    <!-- Target: nav[aria-label="Main navigation"] -->
    ```
 
-2. **Classes** (Good - Reusable, semantic)
+2. **Classes** (Good - Reusable and semantic)
    ```html
    <button class="open-modal-btn">Click Me</button>
    <!-- Target: .open-modal-btn -->
-   
+
    <div class="dropdown-menu">...</div>
    <!-- Target: .dropdown-menu -->
    ```
 
-3. **IDs** (Use sparingly - only for unique components)
+3. **IDs** (Use sparingly - unique components only)
    ```html
    <div id="contact-modal">...</div>
    <!-- Target: #contact-modal -->
-   
+
    <button id="submit-form">Submit</button>
    <!-- Target: #submit-form -->
    ```
 
-4. **Data Attributes** (Good for testing, doesn't affect styling)
+4. **Data Attributes** (Good - Testing-specific, styling-independent)
    ```html
    <button data-testid="modal-trigger">Open</button>
    <!-- Target: [data-testid="modal-trigger"] -->
    ```
 
-### DO ✅
+### Recommended Practices
 
 ```html
-<!-- Clear, semantic, targetable -->
+<!-- Correct: Clear, semantic, targetable -->
 <button class="cta-button" aria-label="Get early access">
   Join Waitlist
 </button>
@@ -242,10 +357,10 @@ When building UI components that will be tested with interactive capture, you MU
 - `.menu-toggle` or `.main-nav button`
 - `.submit-btn` or `.contact-form button[type="submit"]`
 
-### DON'T ❌
+### Practices to Avoid
 
 ```html
-<!-- Hard to target, not semantic -->
+<!-- Incorrect: Non-semantic, difficult to target -->
 <div onclick="openModal()">
   <span>Click Me</span>
 </div>
@@ -254,20 +369,20 @@ When building UI components that will be tested with interactive capture, you MU
 
 <div class="btn">Submit</div> <!-- Should be <button> -->
 
-<a href="#">Menu</a> <!-- Links without href or role -->
+<a href="#">Menu</a> <!-- Links without proper href or role -->
 ```
 
-**Problems:**
-- Non-semantic elements harder to target
-- No ARIA labels makes automation difficult
-- Generic class names like "x", "btn" are ambiguous
-- Missing proper roles and semantics
+**Issues**:
+- Non-semantic elements complicate targeting
+- Missing ARIA labels impede automation
+- Generic class names create ambiguity
+- Absence of proper roles and semantics
 
-### Best Practices for Interactive UI
+### Best Practices for Interactive UI Components
 
-#### 1. **Modals & Dialogs**
+#### 1. Modals & Dialogs
 ```html
-<div class="modal-overlay" role="dialog" aria-modal="true" 
+<div class="modal-overlay" role="dialog" aria-modal="true"
      aria-labelledby="modal-title">
   <div class="modal-content">
     <h2 id="modal-title">Contact Us</h2>
@@ -282,10 +397,10 @@ When building UI components that will be tested with interactive capture, you MU
 - Close: `.modal-close` or `button[aria-label="Close dialog"]`
 - Form: `.modal-form` or `[role="dialog"] form`
 
-#### 2. **Dropdowns & Menus**
+#### 2. Dropdowns & Menus
 ```html
 <div class="dropdown">
-  <button class="dropdown-trigger" aria-haspopup="true" 
+  <button class="dropdown-trigger" aria-haspopup="true"
           aria-expanded="false">
     Options ▼
   </button>
@@ -301,9 +416,9 @@ When building UI components that will be tested with interactive capture, you MU
 - Menu items: `.menu-item` or `[role="menuitem"]`
 - First item: `.dropdown-menu .menu-item:first-child`
 
-#### 3. **Tooltips & Popovers**
+#### 3. Tooltips & Popovers
 ```html
-<button class="info-btn" 
+<button class="info-btn"
         aria-describedby="tooltip-1"
         data-tooltip="More information">
   ℹ️
@@ -317,12 +432,12 @@ When building UI components that will be tested with interactive capture, you MU
 - Trigger: `.info-btn` or `button[aria-describedby="tooltip-1"]`
 - Tooltip: `#tooltip-1` or `.tooltip[role="tooltip"]`
 
-#### 4. **Form Validations**
+#### 4. Form Validations
 ```html
 <form class="signup-form">
   <div class="form-field">
     <label for="email">Email</label>
-    <input id="email" type="email" required 
+    <input id="email" type="email" required
            aria-describedby="email-error" />
     <span id="email-error" class="error-message" role="alert" hidden>
       Please enter a valid email
@@ -337,19 +452,19 @@ When building UI components that will be tested with interactive capture, you MU
 - Submit: `.submit-btn` or `.signup-form button[type="submit"]`
 - Error: `.error-message` or `[role="alert"]`
 
-### Selector Selection Guide
+### Selector Selection Guidelines
 
-**When choosing selectors for interactive testing, agents should:**
+When implementing selectors for interactive testing:
 
-1. **Prefer semantic meaning over structure**
+1. **Prioritize semantic meaning over structural positioning**
    - ✅ `button[aria-label="Close modal"]`
    - ❌ `.modal > div > div > span:last-child`
 
 2. **Use stable identifiers**
-   - ✅ `.modal-close` (explicit class for functionality)
-   - ❌ `.text-sm.absolute.top-2.right-2` (utility classes change)
+   - ✅ `.modal-close` (explicit functional class)
+   - ❌ `.text-sm.absolute.top-2.right-2` (utility classes subject to change)
 
-3. **Be specific but not fragile**
+3. **Maintain specificity without fragility**
    - ✅ `.contact-form .submit-btn`
    - ❌ `body > div:nth-child(3) > form > button:nth-of-type(2)`
 
@@ -364,58 +479,56 @@ When building UI components that will be tested with interactive capture, you MU
 
 ### Interactive Testing Workflow
 
-When building UI that needs interactive testing:
-
 ```
-1. Design component
+1. Design component architecture
    ↓
-2. Add semantic HTML + ARIA attributes
+2. Implement semantic HTML + ARIA attributes
    ↓
 3. Add targetable classes/IDs
    ↓
-4. Build functionality
+4. Develop functionality
    ↓
-5. Test with uisentinel interactive capture
+5. Execute UIsentinel interactive capture
    ↓
-6. If selector fails → Improve element identification
+6. Selector failure? → Improve element identification
    ↓
 7. Re-test until stable
 ```
 
-### Example: Building a Testable Modal
+### Example: Testable Modal Implementation
 
 ```jsx
-// ✅ GOOD - Easy to target, accessible, semantic
+// Correct implementation - Accessible, semantic, easily targetable
 function ContactModal({ isOpen, onClose }) {
   return (
-    <div 
+    <div
       className={`modal-overlay ${isOpen ? 'active' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="contact-modal-title"
     >
       <div className="modal-content">
-        <button 
+        <button
           className="modal-close"
           onClick={onClose}
           aria-label="Close contact form"
         >
           ×
         </button>
-        
+
         <h2 id="contact-modal-title" className="modal-title">
           Contact Us
         </h2>
-        
+
         <form className="contact-form" onSubmit={handleSubmit}>
-          <input 
+          <input
             id="contact-email"
             type="email"
             className="form-input"
             aria-label="Email address"
             required
           />
-          <button 
+          <button
             type="submit"
             className="submit-btn"
             aria-label="Send message"
@@ -428,7 +541,7 @@ function ContactModal({ isOpen, onClose }) {
   );
 }
 
-// Test with:
+// Test commands:
 // --click "button[aria-haspopup='dialog']"  (to open)
 // --click ".modal-close"                     (to close)
 // --click ".contact-form .submit-btn"        (to submit)
@@ -436,81 +549,81 @@ function ContactModal({ isOpen, onClose }) {
 
 ---
 
-## 🔄 Standard UI Development Workflow
+## Enhanced UI Development Workflow
 
-### Workflow Steps
+### Comprehensive Workflow Steps
 
 ```
-1. Receive UI task
+1. Receive UI task request
    ↓
 2. Generate/modify code with targetable elements
-   - Add semantic HTML
+   - Implement semantic HTML
    - Add clear classes/IDs for interactive elements
    - Include ARIA attributes
    ↓
-3. RUN: npm run validate:ui (static validation)
+3. EXECUTE: npm run validate:ui (static validation)
    ↓
-4. Is component interactive? (modal, dropdown, tooltip, etc.)
-   ├─ YES → RUN: Interactive capture with actions
+4. Component contains interactive elements?
+   ├─ YES → EXECUTE: Interactive capture with actions
    │         npx uisentinel capture --name X --click Y --a11y
-   └─ NO → Continue to step 5
+   └─ NO → Proceed to step 5
    ↓
-5. Review validation output + screenshots
+5. Review validation output + screenshot analysis
    ↓
-6. Are there issues (technical OR visual)?
-   ├─ YES → Fix issues → Go to step 3
+6. Issues identified (technical OR visual)?
+   ├─ YES → Apply corrections → Return to step 3
    └─ NO → Task complete ✅
 ```
 
-### Example Workflow 1: Static Component
+### Example Workflow 1: Static Component Implementation
 
 **User Request**: "Create a hero section with a CTA button"
 
 **Agent Response**:
 
 ```markdown
-I'll create the hero section and validate it.
+Implementing hero section with CTA button...
 
-[Generates code for hero section with CTA button]
+[Code generation for hero section with CTA button]
 
-Now validating the UI...
+Executing UI validation...
 
 $ npx uisentinel validate --project . --agent-mode
 
-⚠️ Validation found 3 issues:
+⚠️ Validation identified 3 issues:
 
 1. [SERIOUS] CTA button - Insufficient color contrast
    - Current: 3.1:1 ratio
    - Required: 4.5:1 ratio (WCAG AA)
-   - Fix: Change background from #60a5fa to #2563eb
+   - Recommendation: Change background from #60a5fa to #2563eb
 
 2. [MODERATE] Hero section - Missing alt text on background image
-   - Fix: Add aria-label or use CSS background instead
+   - Recommendation: Add aria-label or implement CSS background
 
-3. [WARNING] Mobile viewport (375px) - Hero text overflows container by 24px
-   - Fix: Add proper responsive padding and max-width
+3. [WARNING] Mobile viewport (375px) - Hero text overflow: 24px
+   - Recommendation: Add responsive padding and max-width
 
-**Reviewing captured screenshots...**
+**Screenshot Analysis:**
 
-**Mobile Screenshot Analysis** (`mobile_1234567890.png`):
-- Hero section spans full width but text is cut off on right edge
-- CTA button appears very light blue, barely visible against background
-- Navigation menu is compressed, hard to read
-- Overall layout functional but needs contrast and spacing fixes
+**Mobile Screenshot** (`mobile_1234567890.png`):
+- Hero section spans full width with right-edge text truncation
+- CTA button exhibits low contrast, minimal visibility against background
+- Navigation menu compressed, reduced readability
+- Layout functional but requires contrast and spacing corrections
 
-**Desktop Screenshot Analysis** (`desktop_1234567890.png`):
-- Hero section well-proportioned, good use of whitespace
-- CTA button contrast issue visible here too
+**Desktop Screenshot** (`desktop_1234567890.png`):
+- Hero section well-proportioned with appropriate whitespace
+- CTA button contrast issue persists
 - Text hierarchy clear and readable
-- Layout appears professional and clean
+- Layout professional and clean
 
-Applying fixes based on technical report + visual analysis...
+Applying corrections based on validation report and visual analysis...
 
-✓ Changed button background to #2563eb (now 7.2:1 contrast ratio)
+✓ Modified button background to #2563eb (7.2:1 contrast ratio)
 ✓ Added aria-label="Hero background" to image
-✓ Added responsive CSS: max-width: 100%; padding: 1rem;
+✓ Implemented responsive CSS: max-width: 100%; padding: 1rem;
 
-Re-validating and capturing new screenshots...
+Executing re-validation and screenshot capture...
 
 $ npx uisentinel validate --project . --agent-mode
 
@@ -521,46 +634,46 @@ $ npx uisentinel validate --project . --agent-mode
   • All viewports validated
 
 **Final Screenshot Review**:
-- **Mobile**: Text now properly contained, button clearly visible with good contrast
-- **Desktop**: Maintains professional appearance, improved button visibility
-- **Visual Confirmation**: All technical fixes verified visually across viewports
+- **Mobile**: Text properly contained, button clearly visible with good contrast
+- **Desktop**: Professional appearance maintained, improved button visibility
+- **Visual Confirmation**: All technical corrections verified visually across viewports
 
-Hero section is complete and accessible!
+Hero section implementation complete and accessible.
 ```
 
-### Example Workflow 2: Interactive Component (NEW!)
+### Example Workflow 2: Interactive Component Implementation
 
 **User Request**: "Create a contact modal that opens when clicking 'Contact Us' button"
 
 **Agent Response**:
 
 ```markdown
-I'll create a contact modal with proper accessibility and interactive testing.
+Implementing contact modal with accessibility features and interactive testing capabilities...
 
-[Generates modal component with targetable elements]
+[Modal component code generation with targetable elements]
 
 ```jsx
 function ContactModal() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
     <>
-      <button 
+      <button
         className="open-modal-btn"
         onClick={() => setIsOpen(true)}
         aria-haspopup="dialog"
       >
         Contact Us
       </button>
-      
-      <div 
+
+      <div
         className={`modal-overlay ${isOpen ? 'active' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         <div className="modal-content">
-          <button 
+          <button
             className="modal-close"
             onClick={() => setIsOpen(false)}
             aria-label="Close contact form"
@@ -579,20 +692,20 @@ function ContactModal() {
 }
 ```
 
-✅ Element accessibility added:
-- Button has `.open-modal-btn` class for targeting
-- Modal has `role="dialog"` and proper ARIA attributes
-- Close button has `.modal-close` class and `aria-label`
-- Form inputs have IDs for accessibility
+✅ Element accessibility implemented:
+- Button: `.open-modal-btn` class for targeting
+- Modal: `role="dialog"` with proper ARIA attributes
+- Close button: `.modal-close` class with `aria-label`
+- Form inputs: IDs for accessibility
 - All interactive elements easily targetable
 
-Now validating static state...
+Executing static state validation...
 
 $ npx uisentinel validate --project . --agent-mode
 
 ✅ Static validation passed (score: 95/100)
 
-Now testing INTERACTIVE state (modal open)...
+Executing interactive state validation (modal open)...
 
 $ npx uisentinel capture \
   --url http://localhost:3000 \
@@ -602,34 +715,34 @@ $ npx uisentinel capture \
   --wait 500 \
   --a11y
 
-⚠️ Interactive validation found issues:
+⚠️ Interactive validation identified issues:
 
-1. [SERIOUS] Modal description text has low contrast (1.8:1)
-   - Fix: Change color from #cbd5e0 to #4a5568
+1. [SERIOUS] Modal description text - Low contrast (1.8:1)
+   - Recommendation: Change color from #cbd5e0 to #4a5568
 
-2. [MODERATE] Close button too small for touch (32x32px)
-   - Fix: Increase to minimum 44x44px
+2. [MODERATE] Close button - Insufficient touch target size (32x32px)
+   - Recommendation: Increase to minimum 44x44px
 
-3. [MODERATE] No focus trap - users can tab outside modal
-   - Fix: Implement keyboard trap
+3. [MODERATE] Missing focus trap - Tab navigation exits modal
+   - Recommendation: Implement keyboard focus containment
 
-**Screenshots Analysis**:
-- **Mobile**: Modal displays but close button barely visible, text hard to read
-- **Desktop**: Modal centered properly but contrast issues evident
+**Screenshot Analysis**:
+- **Mobile**: Modal displays but close button barely visible, text readability compromised
+- **Desktop**: Modal properly centered but contrast issues evident
 
-Applying fixes...
+Applying corrections...
 
-✓ Fixed text contrast (#4a5568)
+✓ Modified text contrast (#4a5568)
 ✓ Increased close button size to 44x44px
-✓ Added keyboard focus trap
+✓ Implemented keyboard focus trap
 ✓ Added ESC key handler
 
-Re-testing interactive state...
+Executing interactive state re-validation...
 
 $ npx uisentinel capture \
   --url http://localhost:3000 \
   --name modal_open_fixed \
-  --description "Contact modal - all issues fixed" \
+  --description "Contact modal - all issues resolved" \
   --click ".open-modal-btn" \
   --wait 500 \
   --a11y
@@ -638,55 +751,55 @@ $ npx uisentinel capture \
   • Accessibility Score: 100/100
   • No violations in open state
   • All touch targets adequate
-  • Keyboard navigation working
+  • Keyboard navigation functional
 
-**Final Screenshots**:
+**Final Screenshot Review**:
 - **Mobile**: Modal clearly visible, text readable, close button adequate size
-- **Desktop**: Professional appearance, perfect contrast, accessible
+- **Desktop**: Professional appearance, optimal contrast, fully accessible
 
-📄 Generated report: `modal_open_fixed.md` with:
+📄 Generated report: `modal_open_fixed.md` containing:
 - Test description
 - Actions performed (click .open-modal-btn, wait 500ms)
 - Accessibility score (100/100)
-- Screenshots embedded
+- Embedded screenshots
 
-Contact modal is complete and fully accessible in both states!
+Contact modal implementation complete and fully accessible in all states.
 ```
 
-**Key Differences from Static Testing**:
-1. ✅ Used `--click` to interact with button before capture
-2. ✅ Added `--wait` to allow modal animation to complete
-3. ✅ Generated named report (`modal_open_fixed.md`) documenting the test
-4. ✅ Validated accessibility in the OPEN state (the state users interact with)
-5. ✅ Ensured all interactive elements were targetable with clear selectors
+**Key Distinctions from Static Testing**:
+1. ✅ Utilized `--click` to interact with button before capture
+2. ✅ Implemented `--wait` to accommodate modal animation
+3. ✅ Generated named report (`modal_open_fixed.md`) documenting test execution
+4. ✅ Validated accessibility in interactive (open) state
+5. ✅ Verified all interactive elements targetable with clear selectors
 
 ---
 
-## 📊 Understanding Validation Output
+## Validation Output Interpretation
 
-### Issue Priority Levels
+### Issue Priority Classification
 
-| Priority | Action Required | Example |
-|----------|----------------|---------|
-| **CRITICAL** | Fix immediately, block completion | Missing form labels, broken navigation |
+| Priority | Action Required | Examples |
+|----------|----------------|----------|
+| **CRITICAL** | Fix immediately, blocks completion | Missing form labels, broken navigation |
 | **SERIOUS** | Fix before proceeding | Insufficient color contrast, missing alt text |
 | **MODERATE** | Fix if time permits | Minor ARIA improvements |
-| **MINOR** | Document for later | Enhancement opportunities |
+| **MINOR** | Document for future iteration | Enhancement opportunities |
 
 ### Accessibility Score Guidelines
 
-- **90-100**: ✅ Excellent - Ship it!
-- **80-89**: ⚠️ Good - Fix SERIOUS issues
-- **70-79**: ⚠️ Needs work - Address multiple issues
-- **Below 70**: ❌ Poor - Major accessibility problems
+- **90-100**: ✅ Excellent - Production ready
+- **80-89**: ⚠️ Good - Resolve SERIOUS issues
+- **70-79**: ⚠️ Needs improvement - Address multiple issues
+- **Below 70**: ❌ Poor - Major accessibility deficiencies
 
-### Common Issues & Fixes
+### Common Issues & Resolutions
 
-#### Color Contrast (Most Common)
+#### Color Contrast
 
-**Issue**: Button color contrast 3.1:1, needs 4.5:1
+**Issue**: Button color contrast 3.1:1, requires 4.5:1
 
-**Fix**:
+**Resolution**:
 ```css
 /* Before */
 .button { background: #60a5fa; color: white; }
@@ -699,7 +812,7 @@ Contact modal is complete and fully accessible in both states!
 
 **Issue**: Images missing alt attributes
 
-**Fix**:
+**Resolution**:
 ```html
 <!-- Before -->
 <img src="hero.jpg">
@@ -712,7 +825,7 @@ Contact modal is complete and fully accessible in both states!
 
 **Issue**: Element overflows container by 45px on mobile
 
-**Fix**:
+**Resolution**:
 ```css
 /* Add responsive constraints */
 .hero-image {
@@ -725,7 +838,7 @@ Contact modal is complete and fully accessible in both states!
 
 **Issue**: Input fields lack proper labels
 
-**Fix**:
+**Resolution**:
 ```html
 <!-- Before -->
 <input type="email" placeholder="Email">
@@ -737,23 +850,23 @@ Contact modal is complete and fully accessible in both states!
 
 ---
 
-## 🎯 Task Completion Checklist
+## Task Completion Checklist
 
-Before marking ANY UI task as complete, verify:
+Before marking any UI task as complete, verify:
 
 ### Static Validation
 - [ ] **Elements targetable**: All interactive elements have clear classes/IDs/ARIA
 - [ ] **Semantic HTML**: Proper element types (button, nav, form, etc.)
-- [ ] **Visual validation ran**: `npm run validate:ui` executed
+- [ ] **Visual validation executed**: `npm run validate:ui` completed
 - [ ] **Accessibility score**: >= 90/100
 - [ ] **Critical issues**: 0 CRITICAL violations
 - [ ] **Serious issues**: 0 SERIOUS violations
 - [ ] **Layout issues**: No overflows on any viewport
 - [ ] **Responsive design**: Tested on mobile (375px), tablet (768px), desktop (1920px)
 
-### Interactive Validation (if applicable)
+### Interactive Validation (when applicable)
 - [ ] **Interactive testing completed**: For modals, dropdowns, tooltips, etc.
-- [ ] **Actions work**: Click, hover, scroll actions execute successfully
+- [ ] **Actions execute successfully**: Click, hover, scroll actions work
 - [ ] **Selectors stable**: Elements targeted with semantic, maintainable selectors
 - [ ] **Interactive state validated**: Accessibility checked in open/active/hover states
 - [ ] **Markdown report generated**: `{name}.md` created with test documentation
@@ -763,29 +876,28 @@ Before marking ANY UI task as complete, verify:
 - [ ] **Images analyzed**: Screenshots reviewed and described
 - [ ] **Responsive compatibility verified**: Checked across all viewports
 - [ ] **Responsive issues identified**: Breakpoint problems documented
-- [ ] **Visual issues addressed**: ALL screenshot problems fixed
-- [ ] **Responsive issues fixed**: ALL compatibility problems resolved
+- [ ] **Visual issues addressed**: ALL screenshot problems corrected
+- [ ] **Responsive issues resolved**: ALL compatibility problems fixed
 
 ### Final Verification
 - [ ] **Re-validation passed**: After fixing issues (both static AND interactive)
 - [ ] **All states tested**: Closed, open, hover, focus, error states as applicable
 
-## 📸 Screenshot Analysis & Documentation
+## Screenshot Analysis & Documentation
 
 ### Mandatory Image Review Process
 
-**CRITICAL**: After every UI validation, you MUST:
+**Critical Requirement**: After every UI validation:
 
-1. **Capture Screenshots**: Use uisentinel to generate screenshots
-2. **Read Screenshots**: Analyze the captured images visually
-3. **Document Findings**: Describe what you see in the screenshots
+1. **Capture Screenshots**: Execute UIsentinel to generate screenshots
+2. **Read Screenshots**: Analyze captured images visually
+3. **Document Findings**: Describe observations from screenshots
 4. **Compare Across Viewports**: Note differences between mobile/desktop
-5. **Fix Visual Issues**: Address ANY problems found in screenshots - this is mandatory
+5. **Fix Visual Issues**: Address ANY problems found in screenshots - mandatory step
 
-### How to Read Captured Screenshots
+### Screenshot File Location
 
-#### 1. **Screenshot Files Are Listed in validation-report.json**
-The validation report contains screenshot paths for each viewport:
+#### Validation Report Contains Screenshot Paths
 ```json
 "screenshots": [
   {
@@ -794,23 +906,25 @@ The validation report contains screenshot paths for each viewport:
     "width": 375, "height": 667
   },
   {
-    "viewport": "desktop", 
+    "viewport": "desktop",
     "path": "/path/to/desktop_timestamp.png",
     "width": 1920, "height": 1080
   }
 ]
 ```
 
-#### 2. **Analyze Each Screenshot**
-For each captured image, document:
-- **Layout Quality**: Is content properly arranged?
-- **Visual Hierarchy**: Does the design guide user attention correctly?
-- **Responsive Behavior**: How does content adapt across screen sizes?
-- **Accessibility Visual Cues**: Are interactive elements clearly visible?
-- **Content Overflow**: Is all content contained within viewport?
-- **Responsive Compatibility**: Does layout work across all viewport sizes without breaking?
+#### Screenshot Analysis Requirements
 
-#### 3. **Simplified Screenshot Documentation**
+For each captured image, document:
+- **Layout Quality**: Content arrangement and organization
+- **Visual Hierarchy**: Design guidance for user attention
+- **Responsive Behavior**: Content adaptation across screen sizes
+- **Accessibility Visual Cues**: Interactive element visibility
+- **Content Overflow**: Viewport containment verification
+- **Responsive Compatibility**: Layout integrity across viewport sizes
+
+#### Documentation Template
+
 ```markdown
 ## Screenshot Analysis
 
@@ -818,99 +932,99 @@ For each captured image, document:
 **Observations**:
 - Layout: [Describe layout structure]
 - Usability: [Button sizes, readability, navigation]
-- Issues: [List any problems found]
+- Issues: [List any problems identified]
 
 ### Desktop (1920px)
 **Observations**:
-- Layout: [Describe layout structure] 
+- Layout: [Describe layout structure]
 - Usability: [Text hierarchy, spacing, interaction elements]
-- Issues: [List any problems found]
+- Issues: [List any problems identified]
 ```
 
-#### 4. **Common Visual Issues to Check**
+#### Common Visual Issues Requiring Correction
 
-**IMPORTANT**: These visual issues have the same priority as technical validation issues and MUST be fixed:
+**Important**: Visual issues have equivalent priority to technical validation issues and must be corrected.
 
 **Layout Problems** (CRITICAL):
 - Content cutoff or overflow
-- Elements overlapping
+- Element overlap
 - Inconsistent spacing
-- Broken grid systems
+- Grid system failures
 
 **Typography Issues** (HIGH):
-- Text too small to read
+- Text too small for readability
 - Poor line height
 - Insufficient contrast visible in screenshots
 - Text wrapping problems
 
 **Interactive Elements** (HIGH):
-- Buttons too small for touch
+- Touch targets too small
 - Links not visually distinct
-- Form fields hard to identify
+- Form fields difficult to identify
 - Navigation unclear
 
 **Responsive Design** (CRITICAL):
-- Content doesn't scale properly
-- Images distorted or pixelated
+- Content scaling failures
+- Image distortion or pixelation
 - Horizontal scrolling on mobile
-- Elements bunched together
+- Element compression
 
 **Responsive Compatibility Issues** (CRITICAL):
 - Layout breaks at specific breakpoints
 - Navigation unusable on mobile
-- Touch targets too small (< 44x44px)
+- Touch targets insufficient (< 44x44px)
 - Content hidden or inaccessible on smaller screens
 - Fixed width elements causing horizontal scroll
-- Text not readable on mobile (too small)
+- Text unreadable on mobile devices
 - Images not adapting to viewport size
 
 **Visual Issue Resolution Priority**:
-1. **CRITICAL**: Layout breaks, content overflow, broken responsive design, responsive compatibility failures
+1. **CRITICAL**: Layout breaks, content overflow, broken responsive design, compatibility failures
 2. **HIGH**: Typography problems, interaction issues, touch target sizing
 3. **MODERATE**: Minor spacing, visual hierarchy improvements
 
-### 5. **Simplified Screenshot Review Steps**
+### Screenshot Review Process
 
 ```markdown
-Before marking any UI task complete:
+Before completing any UI task:
 
 1. ✅ Check validation-report.json for screenshot paths
 2. ✅ Review mobile screenshot - describe layout and usability
 3. ✅ Review desktop screenshot - confirm functionality
-4. ✅ **VERIFY RESPONSIVE COMPATIBILITY** - Compare viewports side-by-side
+4. ✅ **VERIFY RESPONSIVE COMPATIBILITY** - Compare viewports
 5. ✅ Identify responsive issues - document breakpoint problems
 6. ✅ Document visual findings in task completion
-7. ✅ **MANDATORY**: Fix ANY visual issues discovered in screenshots
-8. ✅ **MANDATORY**: Fix ALL responsive compatibility issues
-9. ✅ Re-validate and review new screenshots to confirm fixes
+7. ✅ **MANDATORY**: Correct ANY visual issues discovered
+8. ✅ **MANDATORY**: Resolve ALL responsive compatibility issues
+9. ✅ Re-validate and review new screenshots to confirm corrections
 ```
 
-### 6. **Responsive Compatibility Verification**
+### Responsive Compatibility Verification
 
-**CRITICAL**: You MUST verify and fix responsive design issues across viewports.
+**Critical Requirement**: Verify and correct responsive design issues across all viewports.
 
-**What to Check**:
-- [ ] **Mobile (375px)**: Navigation works, content readable, no horizontal scroll
+**Verification Checklist**:
+- [ ] **Mobile (375px)**: Navigation functional, content readable, no horizontal scroll
 - [ ] **Tablet (768px)**: Layout transitions properly, touch targets adequate
-- [ ] **Desktop (1920px)**: Content properly centered/maxed, whitespace balanced
+- [ ] **Desktop (1920px)**: Content properly centered/constrained, whitespace balanced
 - [ ] **Breakpoint Transitions**: Smooth transitions between viewport sizes
 - [ ] **Touch Targets**: All interactive elements >= 44x44px on mobile
-- [ ] **Text Scaling**: Text readable at all sizes (min 16px body on mobile)
+- [ ] **Text Scaling**: Text readable at all sizes (minimum 16px body on mobile)
 - [ ] **Image Responsiveness**: Images scale properly, maintain aspect ratio
-- [ ] **Navigation Pattern**: Appropriate for each viewport (hamburger on mobile, etc.)
+- [ ] **Navigation Pattern**: Appropriate for each viewport (e.g., hamburger on mobile)
 
-**Common Responsive Issues to Fix**:
+**Common Responsive Issues to Resolve**:
 1. **Fixed widths causing overflow**: Replace with `max-width: 100%`
 2. **Text too small on mobile**: Increase font-size for mobile viewport
-3. **Buttons too small for touch**: Ensure min 44x44px hit areas
+3. **Buttons too small for touch**: Ensure minimum 44x44px hit areas
 4. **Navigation hidden on mobile**: Implement mobile-friendly navigation
 5. **Tables not responsive**: Use card layout or horizontal scroll indicators
 6. **Images breaking layout**: Add `max-width: 100%; height: auto;`
 7. **Content not centered on large screens**: Add `max-width` container
 
-**CRITICAL RULE**: If screenshots reveal ANY visual problems (layout issues, poor contrast, broken responsive design, compatibility failures, etc.), these MUST be fixed before task completion, regardless of technical validation scores.
+**Critical Rule**: Screenshots revealing ANY visual problems (layout issues, poor contrast, broken responsive design, compatibility failures) must be corrected before task completion, regardless of technical validation scores.
 
-### Template Response
+### Task Completion Template
 
 ```markdown
 ✅ Task Complete: [Task Name]
@@ -925,15 +1039,15 @@ Validation Results:
 • Mobile (375px): [Brief description of mobile layout and any issues]
 • Desktop (1920px): [Brief description of desktop layout quality]
 • Visual Issues Found: [List any visual problems discovered]
-• Visual Issues Fixed: [List fixes applied based on screenshot review]
+• Visual Issues Fixed: [List corrections applied based on screenshot review]
 
 **Responsive Compatibility Assessment:**
 • Breakpoint Transitions: [Smooth/Issues found]
-• Mobile Navigation: [Working/Fixed]
+• Mobile Navigation: [Functional/Fixed]
 • Touch Targets: [All adequate/Fixed undersized elements]
 • Content Scaling: [Proper/Issues resolved]
 • Responsive Issues Found: [List compatibility problems]
-• Responsive Issues Fixed: [List fixes applied]
+• Responsive Issues Fixed: [List corrections applied]
 
 Final Status: All checks passed ✅
 ```
@@ -941,11 +1055,11 @@ Final Status: All checks passed ✅
 ### Enhanced Workflow with Screenshot Analysis
 
 ```
-1. Receive UI task
+1. Receive UI task request
    ↓
-2. Generate/modify code
+2. Generate/modify code implementation
    ↓
-3. RUN: npm run validate:ui
+3. EXECUTE: npm run validate:ui
    ↓
 4. Review accessibility/layout report
    ↓
@@ -953,36 +1067,36 @@ Final Status: All checks passed ✅
    ↓
 6. Document visual findings
    ↓
-7. Are there technical OR visual issues?
-   ├─ YES → Fix ALL issues (technical + visual) → Go to step 3
+7. Technical OR visual issues identified?
+   ├─ YES → Correct ALL issues (technical + visual) → Return to step 3
    └─ NO → Task complete ✅
 ```
 
-**Critical Addition**: Step 5 (screenshot analysis) is now mandatory and must be documented in your response.
+**Critical Addition**: Step 5 (screenshot analysis) is mandatory and must be documented in response.
 
-**New Rule**: Visual issues found in screenshots have equal priority to technical validation issues and MUST be fixed.
+**New Rule**: Visual issues identified in screenshots have equal priority to technical validation issues and must be corrected.
 
 ---
 
-## 🚨 Error Handling
+## Error Handling
 
-### Common Issues & Solutions
+### Common Issues & Resolutions
 
 #### Issue: "Unable to detect project type"
 
-**Solution**: Ensure you're in the project root with `package.json`
+**Resolution**: Verify location in project root containing `package.json`
 
 ```bash
-# Check if package.json exists
+# Verify package.json exists
 ls package.json
 
-# If not, navigate to project root
+# Navigate to project root if needed
 cd /path/to/project
 ```
 
 #### Issue: "Port already in use"
 
-**Solution**: uisentinel auto-detects available ports, but you can specify:
+**Resolution**: UIsentinel auto-detects available ports; manual specification available:
 
 ```bash
 npx uisentinel capture --url http://localhost:3001
@@ -990,19 +1104,19 @@ npx uisentinel capture --url http://localhost:3001
 
 #### Issue: "Server start timeout"
 
-**Solution**: Increase timeout or ensure dev script works:
+**Resolution**: Verify dev script functionality or increase timeout:
 
 ```bash
-# Test your dev script first
+# Test dev script
 npm run dev
 
-# Then validate
+# Execute validation
 npx uisentinel validate --project .
 ```
 
 #### Issue: "Screenshots are blank"
 
-**Solution**: Add wait time for content to load:
+**Resolution**: Add wait time for content loading:
 
 ```bash
 npx uisentinel capture --url http://localhost:3000 --wait-timeout 60000
@@ -1010,28 +1124,28 @@ npx uisentinel capture --url http://localhost:3000 --wait-timeout 60000
 
 ---
 
-## 💻 Programmatic Usage (Advanced)
+## Programmatic Usage
 
 ### Reading Screenshot Files
 
-Screenshots paths are automatically included in `validation-report.json`:
+Screenshot paths are automatically included in `validation-report.json`:
 
 ```json
 "screenshots": [
   {
     "viewport": "mobile",
-    "path": "/Users/.../mobile_1759305896208.png", 
+    "path": "/Users/.../mobile_1759305896208.png",
     "width": 375, "height": 667
   },
   {
     "viewport": "desktop",
     "path": "/Users/.../desktop_1759305897212.png",
-    "width": 1920, "height": 1080  
+    "width": 1920, "height": 1080
   }
 ]
 ```
 
-**No need to manually locate files** - the validation report provides exact paths.
+**Note**: Manual file location unnecessary - validation report provides exact paths.
 
 ### Accessing Screenshots
 
@@ -1039,11 +1153,11 @@ Screenshots paths are automatically included in `validation-report.json`:
 # Open screenshots for visual inspection (macOS)
 open ./uisentinel-output/screenshots/
 
-# Copy screenshots to accessible location if needed
+# Copy screenshots to accessible location
 cp ./uisentinel-output/screenshots/*.png ./public/screenshots/
 ```
 
-For complex workflows, use the JavaScript API:
+### JavaScript API
 
 ```javascript
 const { UISentinel } = require('uisentinel');
@@ -1058,18 +1172,18 @@ async function validateUI() {
   try {
     await nb.start();
     const results = await nb.validate();
-    
-    // Check results
-    const hasIssues = results.some(r => 
+
+    // Evaluate results
+    const hasIssues = results.some(r =>
       r.accessibility && r.accessibility.score < 90
     );
-    
+
     if (hasIssues) {
-      console.log('⚠️ Issues found - fixing...');
-      // Apply fixes...
+      console.log('⚠️ Issues identified - applying corrections...');
+      // Apply corrections...
       // Re-validate...
     }
-    
+
   } finally {
     await nb.close();
   }
@@ -1078,47 +1192,47 @@ async function validateUI() {
 
 ---
 
-## 📈 Best Practices
+## Best Practices
 
-### DO ✅
+### Recommended Practices
 
 1. **Always add targetable elements** - Use semantic HTML, clear classes, ARIA attributes
 2. **Always validate after UI changes** - Both static AND interactive states
 3. **Test interactive components** - Use interactive capture for modals, dropdowns, etc.
-4. **READ and ANALYZE captured screenshots** - Never skip visual review
-5. **Fix ALL visual issues found in screenshots** - This is mandatory
+4. **READ and ANALYZE captured screenshots** - Visual review is mandatory
+5. **Fix ALL visual issues found in screenshots** - This is required
 6. **Fix CRITICAL technical issues first**
 7. **Test on multiple viewports** - Mobile, tablet, desktop
 8. **Document visual findings** from screenshot analysis
-9. **Re-validate AND re-screenshot after fixes**
-10. **Keep accessibility score >= 90** in all states
+9. **Re-validate AND re-screenshot after corrections**
+10. **Maintain accessibility score >= 90** in all states
 11. **Compare before/after screenshots** when fixing issues
-12. **Verify visual fixes match technical fixes**
+12. **Verify visual corrections match technical corrections**
 13. **Generate markdown reports** for interactive tests (--name parameter)
 14. **Use stable selectors** - Prefer semantic over positional selectors
-15. **Document what you fixed**
+15. **Document corrections applied**
 
-### DON'T ❌
+### Practices to Avoid
 
 1. **Never skip element accessibility** - All interactive elements must be targetable
 2. **Never use fragile selectors** - Avoid nth-child, deeply nested paths
-3. **Never skip validation** ("it looks fine in the code")
-4. **Never test only static state** - Interactive components need interactive testing
-5. **Never ignore captured screenshots** - Always analyze them visually
-6. **Never ignore visual issues found in screenshots** - They must be fixed
-7. **Don't ignore SERIOUS technical issues**
-8. **Don't assume mobile works** (always test AND screenshot)
-9. **Don't forget to re-validate AND re-screenshot** after fixes
-10. **Don't mark complete with score < 90** in any state
-11. **Don't rely solely on technical reports** - Visual confirmation is required
-12. **Don't skip cross-viewport comparison** of screenshots
-13. **Don't complete tasks with unresolved visual problems**
-14. **Don't overuse IDs** - Use classes for reusable components
-15. **Don't skip interactive testing** for dynamic components
+3. **Never skip validation** (assumptions about code correctness)
+4. **Never test only static state** - Interactive components require interactive testing
+5. **Never ignore captured screenshots** - Always analyze visually
+6. **Never ignore visual issues in screenshots** - Correction is mandatory
+7. **Do not ignore SERIOUS technical issues**
+8. **Do not assume mobile compatibility** (always test AND screenshot)
+9. **Do not forget to re-validate AND re-screenshot** after corrections
+10. **Do not mark complete with score < 90** in any state
+11. **Do not rely solely on technical reports** - Visual confirmation required
+12. **Do not skip cross-viewport comparison** of screenshots
+13. **Do not complete tasks with unresolved visual problems**
+14. **Do not overuse IDs** - Use classes for reusable components
+15. **Do not skip interactive testing** for dynamic components
 
 ---
 
-## 🔧 Configuration
+## Configuration
 
 ### Project-Level Configuration
 
@@ -1143,8 +1257,6 @@ module.exports = {
 ```
 
 ### Package.json Scripts (Recommended)
-
-Add these to `package.json`:
 
 ```json
 {
@@ -1173,19 +1285,18 @@ npx uisentinel capture --viewports mobile,desktop
 npx uisentinel agent-report --focus accessibility
 
 # Create baseline for visual regression
-npx uisentinel capture --url / 
-# Then manually: npx uisentinel createBaseline <screenshot-path> <name>
+npx uisentinel capture --url /
 ```
 
 ---
 
-## 🎓 Training Examples
+## Training Examples
 
-### Example 1: Simple Button Component
+### Example 1: Accessible Button Component
 
 **Task**: Create an accessible CTA button
 
-**Code**:
+**Implementation**:
 ```jsx
 function CTAButton() {
   return <button className="cta">Click Me</button>;
@@ -1198,12 +1309,12 @@ $ npm run validate:ui
 ⚠️ Issue: Button contrast 3.1:1 (needs 4.5:1)
 ```
 
-**Fix**:
+**Correction**:
 ```jsx
 function CTAButton() {
   return (
-    <button 
-      className="cta" 
+    <button
+      className="cta"
       style={{ background: '#2563eb', color: 'white' }}
       aria-label="Get started with our service"
     >
@@ -1221,13 +1332,13 @@ $ npm run validate:ui
 
 ### Example 2: Responsive Hero Section
 
-**Task**: Create mobile-responsive hero
+**Task**: Create mobile-responsive hero section
 
-**Validation Found**:
+**Validation Findings**:
 - Mobile overflow: 45px
 - Tablet: Image aspect ratio distorted
 
-**Fix Applied**:
+**Corrections Applied**:
 ```css
 .hero {
   max-width: 100%;
@@ -1243,23 +1354,23 @@ $ npm run validate:ui
 
 ---
 
-## 🎯 Summary
+## Summary
 
-**Remember**: As a UI/UX developer, you must:
+**Core Requirements for UI/UX Development**:
 
-1. 👀 **SEE what you build** - Always capture screenshots
-2. ♿ **ENSURE accessibility** - Minimum score of 90
-3. 📱 **TEST responsiveness** - Mobile, tablet, desktop
-4. 🔧 **FIX issues promptly** - Critical → Serious → Moderate
-5. ✅ **VALIDATE completion** - Re-check after fixes
+1. 👀 **Visual verification mandatory** - Always capture screenshots
+2. ♿ **Accessibility compliance** - Minimum score of 90
+3. 📱 **Responsive design testing** - Mobile, tablet, desktop
+4. 🔧 **Prompt issue resolution** - Critical → Serious → Moderate
+5. ✅ **Completion validation** - Re-verification after corrections
 
-**Key Command to Remember**:
+**Primary Command**:
 ```bash
 npx uisentinel validate --project . --agent-mode
 ```
 
-This is your go-to command for every UI task!
+This is the standard command for all UI development tasks.
 
 ---
 
-**👁️ Never code blindly - always validate visually!**
+**Visual validation is non-negotiable for all UI development work.**

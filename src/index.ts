@@ -169,6 +169,14 @@ export class UISentinel {
   }
 
   /**
+   * Get the browser engine for advanced capture operations
+   * Use this to access element-specific captures, clipping, zoom, etc.
+   */
+  getBrowserEngine(): BrowserEngine {
+    return this.browserEngine;
+  }
+
+  /**
    * Stop server and close browser
    */
   async close(): Promise<void> {

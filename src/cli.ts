@@ -250,6 +250,314 @@ program
     }
   });
 
+// Advanced capture commands
+program
+  .command('element')
+  .description('Capture a specific element')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-s, --selector <selector>', 'CSS selector of element to capture')
+  .option('-p, --padding <px>', 'Padding around element', '0')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--scroll', 'Scroll element into view', true)
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora('Capturing element...').start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureElement({
+        selector: options.selector,
+        padding: parseInt(options.padding),
+        scrollIntoView: options.scroll,
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Element captured!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Element: ${options.selector}`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Element capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('clip')
+  .description('Capture a specific rectangular region')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-x <pixels>', 'X coordinate')
+  .requiredOption('-y <pixels>', 'Y coordinate')
+  .requiredOption('-w, --width <pixels>', 'Width')
+  .requiredOption('--height <pixels>', 'Height')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora('Capturing region...').start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureClip({
+        x: parseInt(options.x),
+        y: parseInt(options.y),
+        width: parseInt(options.width),
+        height: parseInt(options.height),
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Region captured!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Region: ${options.x},${options.y} ${options.width}x${options.height}`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Region capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('zoom')
+  .description('Capture with zoom applied')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-z, --zoom <level>', 'Zoom level (e.g., 0.5, 2, 1.5)')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--full-page', 'Capture full page', false)
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora(`Capturing with ${options.zoom}x zoom...`).start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureWithZoom({
+        zoom: parseFloat(options.zoom),
+        fullPage: options.fullPage,
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Zoomed capture complete!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Zoom: ${options.zoom}x`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Zoom capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('element-zoom')
+  .description('Capture element with zoom applied')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-s, --selector <selector>', 'CSS selector')
+  .requiredOption('-z, --zoom <level>', 'Zoom level (e.g., 2, 1.5)')
+  .option('-p, --padding <px>', 'Padding around element', '0')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--scroll', 'Scroll into view', true)
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora(`Capturing element with ${options.zoom}x zoom...`).start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureElementWithZoom({
+        selector: options.selector,
+        zoom: parseFloat(options.zoom),
+        padding: parseInt(options.padding),
+        scrollIntoView: options.scroll,
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Element zoom capture complete!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Element: ${options.selector}`));
+      console.log(chalk.gray(`   Zoom: ${options.zoom}x`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Element zoom capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('region-zoom')
+  .description('Capture region with zoom applied')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-x <pixels>', 'X coordinate')
+  .requiredOption('-y <pixels>', 'Y coordinate')
+  .requiredOption('-w, --width <pixels>', 'Width')
+  .requiredOption('--height <pixels>', 'Height')
+  .requiredOption('-z, --zoom <level>', 'Zoom level (e.g., 2, 1.5)')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora(`Capturing region with ${options.zoom}x zoom...`).start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureRegionWithZoom({
+        x: parseInt(options.x),
+        y: parseInt(options.y),
+        width: parseInt(options.width),
+        height: parseInt(options.height),
+        zoom: parseFloat(options.zoom),
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Region zoom capture complete!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Region: ${options.x},${options.y} ${options.width}x${options.height}`));
+      console.log(chalk.gray(`   Zoom: ${options.zoom}x`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Region zoom capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('highlight')
+  .description('Capture element with highlight')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-s, --selector <selector>', 'CSS selector to highlight')
+  .option('-c, --color <color>', 'Highlight color', '#ff0000')
+  .option('-w, --width <px>', 'Highlight width', '3')
+  .option('-n, --name <name>', 'Output filename (without extension)')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora('Capturing with highlight...').start();
+    try {
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const screenshotPath = await advCapture.captureWithHighlight({
+        selector: options.selector,
+        highlightColor: options.color,
+        highlightWidth: parseInt(options.width),
+        path: options.name ? `${options.name}.png` : undefined,
+      });
+      
+      spinner.succeed('Highlighted capture complete!');
+      console.log(chalk.green(`\n📸 Screenshot: ${screenshotPath}`));
+      console.log(chalk.gray(`   Highlighted: ${options.selector}`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Highlight capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('before-after')
+  .description('Capture element before and after interaction')
+  .requiredOption('-u, --url <url>', 'URL to visit')
+  .requiredOption('-s, --selector <selector>', 'CSS selector')
+  .requiredOption('-a, --action <action>', 'Action: hover, focus, or click')
+  .option('-n, --name <name>', 'Base name for output files')
+  .option('-o, --output <dir>', 'Output directory', './uisentinel-output')
+  .option('--viewport <viewport>', 'Viewport preset', 'desktop')
+  .action(async (options) => {
+    const spinner = ora('Capturing before/after states...').start();
+    try {
+      if (!['hover', 'focus', 'click'].includes(options.action)) {
+        throw new Error('Action must be: hover, focus, or click');
+      }
+
+      const nb = new UISentinel({
+        output: { directory: options.output, format: 'json' },
+        headless: true,
+      });
+      await nb.start();
+      
+      const page = await nb.getBrowserEngine().createPage(options.url, options.viewport);
+      const advCapture = nb.getBrowserEngine().getAdvancedCapture(page);
+      
+      const [beforePath, afterPath] = await advCapture.captureBeforeAfter({
+        selector: options.selector,
+        action: options.action,
+        beforePath: options.name ? `${options.name}_before.png` : undefined,
+        afterPath: options.name ? `${options.name}_after.png` : undefined,
+      });
+      
+      spinner.succeed('Before/after capture complete!');
+      console.log(chalk.green('\n📸 Screenshots:'));
+      console.log(chalk.gray(`   Before: ${beforePath}`));
+      console.log(chalk.gray(`   After:  ${afterPath}`));
+      console.log(chalk.gray(`   Action: ${options.action} on ${options.selector}`));
+      
+      await page.close();
+      await nb.close();
+    } catch (error: any) {
+      spinner.fail('Before/after capture failed');
+      console.error(chalk.red(error.message));
+      process.exit(1);
+    }
+  });
+
 program
   .command('init')
   .description('Initialize uisentinel configuration')
