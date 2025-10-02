@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { ServerManager } from './server-manager';
 import { BrowserEngine } from './browser-engine';
 import { VisualDiff } from './visual-diff';
@@ -68,12 +69,32 @@ export class UISentinel {
       fullPage: options.fullPage ?? this.config.screenshot.fullPage,
       waitForSelector: options.waitForSelector,
       waitForTimeout: options.waitForTimeout || this.config.timeout,
+      name: options.name,
+      description: options.description,
+      actions: options.actions,
     };
 
     console.log(`📸 Capturing ${captureOptions.url}...`);
 
     const result = await this.browserEngine.capture(captureOptions);
     const suggestions = this.generateSuggestions(result);
+
+    // Generate markdown report if name is provided
+    if (captureOptions.name) {
+      const reportContent = this.browserEngine.generateCaptureReport(
+        captureOptions,
+        result.screenshots,
+        result.accessibility
+      );
+      
+      if (reportContent) {
+        const reportPath = path.join(
+          this.config.output.directory,
+          `${captureOptions.name}.md`
+        );
+        fs.writeFileSync(reportPath, reportContent);
+      }
+    }
 
     return {
       status: suggestions.length === 0 ? 'success' : 'warning',
@@ -145,6 +166,14 @@ export class UISentinel {
   async agentReport(focus?: string[]): Promise<string> {
     const results = await this.validate();
     return this.formatForAgent(results, focus);
+  }
+
+  /**
+   * Get the browser engine for advanced capture operations
+   * Use this to access element-specific captures, clipping, zoom, etc.
+   */
+  getBrowserEngine(): BrowserEngine {
+    return this.browserEngine;
   }
 
   /**

@@ -144,6 +144,33 @@ uisentinel validate --project . --routes /,/about,/contact
 uisentinel agent-report --project . --focus accessibility,layout
 ```
 
+### 🆕 Advanced Capture (Like a UI/UX Developer)
+
+```bash
+# ✅ Capture specific element (component)
+uisentinel element --url http://localhost:3000 --selector "#main-nav" --name navigation
+
+# ✅ Capture element with zoom (zoomed component view)
+uisentinel element-zoom --url http://localhost:3000 --selector ".button" --zoom 2 --name button_detail
+
+# ✅ Capture with page zoom (full page zoomed)
+uisentinel zoom --url http://localhost:3000 --zoom 2 --name detail_view
+
+# ✅ Capture region with zoom (zoomed area)
+uisentinel region-zoom --url http://localhost:3000 -x 0 -y 0 -w 400 --height 300 --zoom 1.5 --name hero_zoomed
+
+# ✅ Highlight element (for documentation)
+uisentinel highlight --url http://localhost:3000 --selector ".cta-button" --color "#ff0000"
+
+# ✅ Capture before/after hover effect
+uisentinel before-after --url http://localhost:3000 --selector ".button" --action hover
+
+# ✅ Capture specific region (clip)
+uisentinel clip --url http://localhost:3000 -x 0 -y 0 --width 400 --height 300
+```
+
+**📖 [Complete Advanced Capture Guide →](./docs/advanced-capture.md)**
+
 ## 🛠️ Features
 
 ### 1. Web Framework Auto-Detection
@@ -160,9 +187,18 @@ Automatically detects and starts your web dev server:
 ### 2. Visual Capture (Web Browsers)
 - 📸 Multiple viewport sizes (mobile, tablet, desktop web)
 - 🎨 Full page screenshots
-- 🎯 Element-specific captures
+- 🎯 **Element-specific captures** ✅
+- ✂️ **Custom region/clip captures** ✅
+- 🔍 **Page zoom captures** ✅
+- 🔬 **Element zoom captures** ✅ NEW!
+- 📐 **Region zoom captures** ✅ NEW!
+- ✨ **Highlight/annotation captures** ✅
+- 🎭 **Before/after state captures** ✅
+- 📜 **Scroll position captures** ✅
 - ⚡ Parallel capture for speed
 - 🌐 Works with Chrome, Firefox, Safari via Playwright
+
+**👉 [Complete Advanced Capture Guide →](./docs/advanced-capture.md)**
 
 ### 3. Web Accessibility Analysis
 - ♿ WCAG 2.1 Level AA compliance
