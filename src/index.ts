@@ -323,3 +323,11 @@ export class UISentinel {
 
 // Export for use
 export * from './types';
+export { ExtensionManager, BrowserExtension, BaseExtension } from './extensions/extension-manager';
+export { ElementInspector } from './extensions/element-inspector';
+export { A11yInspector } from './extensions/a11y-inspector';
+export { ContrastChecker } from './extensions/contrast-checker';
+export { ElementRuler } from './extensions/element-ruler';
+export { ComponentDetector } from './extensions/component-detector';
+export { LayoutGrid } from './extensions/layout-grid';
+export { BreakpointVisualizer } from './extensions/breakpoint-visualizer';

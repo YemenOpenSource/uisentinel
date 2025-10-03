@@ -14,6 +14,7 @@ import {
 } from './types';
 import { InteractionEngine } from './interaction-engine';
 import { AdvancedCapture } from './advanced-capture';
+import { ExtensionManager } from './extensions/extension-manager';
 
 /**
  * Handles browser automation and visual capture
@@ -21,10 +22,12 @@ import { AdvancedCapture } from './advanced-capture';
 export class BrowserEngine {
   private browser: Browser | null = null;
   private outputDir: string;
+  private extensionManager: ExtensionManager;
 
   constructor(outputDir: string = './uisentinel-output') {
     this.outputDir = path.resolve(outputDir);
     this.ensureOutputDir();
+    this.extensionManager = new ExtensionManager();
   }
 
   /**
@@ -400,6 +403,21 @@ export class BrowserEngine {
    */
   getAdvancedCapture(page: Page): AdvancedCapture {
     return new AdvancedCapture(page, this.outputDir);
+  }
+
+  /**
+   * Get extension manager
+   * Use this to register and inject browser extensions
+   * 
+   * @example
+   * ```js
+   * const manager = engine.getExtensionManager();
+   * manager.register(new ScreenshotAnnotator());
+   * await manager.injectExtension(page, 'screenshot-annotator');
+   * ```
+   */
+  getExtensionManager(): ExtensionManager {
+    return this.extensionManager;
   }
 
   /**
