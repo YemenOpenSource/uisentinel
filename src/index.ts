@@ -331,3 +331,7 @@ export { ElementRuler } from './extensions/element-ruler';
 export { ComponentDetector } from './extensions/component-detector';
 export { LayoutGrid } from './extensions/layout-grid';
 export { BreakpointVisualizer } from './extensions/breakpoint-visualizer';
+// New responsive design extensions
+export { MediaQueryInspector } from './extensions/media-query-inspector';
+export { ResponsiveDesignInspector } from './extensions/responsive-design-inspector';
+export { MobileUXAnalyzer } from './extensions/mobile-ux-analyzer';
