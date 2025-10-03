@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page for Browser Extensions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+      margin: 20px 0;
+      padding: 10px;
+    }
+
+    .low-contrast {
+      background: #f0f0f0;
+      color: #d0d0d0;  /* Very low contrast - should fail */
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .good-contrast {
+      background: #ffffff;
+      color: #000000;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .warning {
+      background: #ffeb3b;
+      color: #fff9c4;  /* Low contrast on yellow background */
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    button {
+      background: #60a5fa;
+      color: #93c5fd;  /* Low contrast */
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      margin: 20px 10px;
+      font-size: 16px;
+    }
+
+    .info-box {
+      background: #f9fde3;
+      padding: 20px;
+      margin: 20px 0;
+      border: 2px solid #b3bb7f;
+    }
+
+    .missing-alt img {
+      width: 200px;
+      height: 150px;
+      background: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Browser Extensions Test Page</h1>
+
+  <div class="good-contrast">
+    <h2>Good Contrast Section</h2>
+    <p>This text has good contrast and should pass WCAG AA standards (black text on white background).</p>
+  </div>
+
+  <div class="low-contrast">
+    <h2>Low Contrast Section - Should Fail!</h2>
+    <p>This text has very low contrast and should be highlighted by the contrast checker.</p>
+  </div>
+
+  <div class="warning">
+    <strong>Warning: This text also has low contrast issues!</strong>
+  </div>
+
+  <div class="info-box">
+    <h3>Information Box</h3>
+    <p>This is an info box with moderate contrast. Let's see how it performs.</p>
+
+    <button>Low Contrast Button</button>
+    <button style="background: #2563eb; color: white;">Better Contrast</button>
+  </div>
+
+  <div class="missing-alt">
+    <img src="placeholder.jpg">
+  </div>
+
+  <form>
+    <label>Name:</label>
+    <input type="text" name="name">
+  </form>
+
+  <div style="margin: 30px 0; padding: 15px; background: #e0e0e0;">
+    <p style="color: #c0c0c0;">Another low contrast text example</p>
+    <p style="color: #333;">This text has better contrast</p>
+  </div>
+</body>
+</html>
