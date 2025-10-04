@@ -101,6 +101,17 @@ Initialize UISentinel in your project to set up configuration, then integrate it
 
 **See the [Integration Guide](./docs/integrations.md) to get started with your AI agent.**
 
+## 🎬 Live Demo
+
+Want to see UISentinel in action? Check out the **[complete demo](./demo/)** with:
+
+- **Before/After Examples**: Landing page with 11 intentional UI/UX issues and their fixes
+- **Validation Results**: Real accessibility and responsive design scores
+- **Step-by-step Guide**: How to use UISentinel with Claude Code
+- **Issue Breakdown**: Detailed analysis of each problem and solution
+
+**[View the demo →](./demo/README.md)**
+
 ## 🤖 Integration with AI Coding Agents
 
 UISentinel works seamlessly with AI coding assistants, giving them visual validation capabilities.
