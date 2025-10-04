@@ -1,5 +1,10 @@
 # 👁️ UISentinel
 
+[![npm version](https://img.shields.io/npm/v/uisentinel.svg?style=flat-square)](https://www.npmjs.com/package/uisentinel)
+[![npm downloads](https://img.shields.io/npm/dm/uisentinel.svg?style=flat-square)](https://www.npmjs.com/package/uisentinel)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![GitHub tag](https://img.shields.io/github/v/tag/mhjabreel/uisentinel.svg?style=flat-square)](https://github.com/mhjabreel/uisentinel/tags)
+
 **Give AI coding agents vision to debug and analyze their UI/UX designs.**
 
 UISentinel enables AI agents to see, analyze, and debug the web UIs they create. Instead of generating code blindly, AI agents can now visually validate their work, check accessibility, measure layouts, and iterate on designs with visual feedback.
