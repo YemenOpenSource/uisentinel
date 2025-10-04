@@ -16,3 +16,11 @@ uisentinel-output/
 *.png
 *.jpg
 *.jpeg
+
+roadmap/
+# User-generated design sessions
+.uisentinel/
+.github/
+.claude/
+.demos/
+uisentinel.config.js

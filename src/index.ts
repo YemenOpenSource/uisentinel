@@ -52,121 +52,6 @@ export class UISentinel {
     this.isStarted = true;
   }
 
-  /**
-   * Capture and validate a URL
-   */
-  async capture(options: Partial<CaptureOptions>): Promise<ValidationResult> {
-    if (!this.isStarted) {
-      await this.start();
-    }
-
-    const captureOptions: CaptureOptions = {
-      url: options.url || this.config.host || 'http://localhost:3000',
-      viewports: options.viewports || this.config.viewports,
-      accessibility: options.accessibility ?? this.config.accessibility.enabled,
-      screenshot: options.screenshot ?? this.config.screenshot.enabled,
-      layoutAnalysis: options.layoutAnalysis ?? true,
-      fullPage: options.fullPage ?? this.config.screenshot.fullPage,
-      waitForSelector: options.waitForSelector,
-      waitForTimeout: options.waitForTimeout || this.config.timeout,
-      name: options.name,
-      description: options.description,
-      actions: options.actions,
-    };
-
-    console.log(`📸 Capturing ${captureOptions.url}...`);
-
-    const result = await this.browserEngine.capture(captureOptions);
-    const suggestions = this.generateSuggestions(result);
-
-    // Generate markdown report if name is provided
-    if (captureOptions.name) {
-      const reportContent = this.browserEngine.generateCaptureReport(
-        captureOptions,
-        result.screenshots,
-        result.accessibility
-      );
-      
-      if (reportContent) {
-        const reportPath = path.join(
-          this.config.output.directory,
-          `${captureOptions.name}.md`
-        );
-        fs.writeFileSync(reportPath, reportContent);
-      }
-    }
-
-    return {
-      status: suggestions.length === 0 ? 'success' : 'warning',
-      url: captureOptions.url,
-      timestamp: new Date().toISOString(),
-      screenshots: result.screenshots,
-      accessibility: result.accessibility,
-      layout: result.layout,
-      suggestions,
-      errors: [],
-    };
-  }
-
-  /**
-   * Validate multiple routes
-   */
-  async validate(routes?: string[]): Promise<ValidationResult[]> {
-    if (!this.isStarted) {
-      await this.start();
-    }
-
-    const routesToValidate = routes || this.config.routes || ['/'];
-    const results: ValidationResult[] = [];
-
-    for (const route of routesToValidate) {
-      const url = new URL(route, this.config.host).href;
-      const result = await this.capture({ url });
-      results.push(result);
-    }
-
-    return results;
-  }
-
-  /**
-   * Run visual diff against baseline
-   */
-  async diff(currentScreenshot: string, baseline?: string): Promise<ValidationResult> {
-    const baselinePath = baseline || this.findMatchingBaseline(currentScreenshot);
-    
-    if (!baselinePath) {
-      throw new Error('No baseline found. Create one with createBaseline()');
-    }
-
-    const diffResult = await this.visualDiff.compare(baselinePath, currentScreenshot);
-    
-    return {
-      status: diffResult.passed ? 'success' : 'error',
-      url: '',
-      timestamp: new Date().toISOString(),
-      screenshots: [],
-      visualDiff: diffResult,
-      suggestions: diffResult.passed 
-        ? [] 
-        : [`Visual regression detected: ${diffResult.diffPercentage}% difference`],
-      errors: [],
-    };
-  }
-
-  /**
-   * Create a baseline from current screenshot
-   */
-  async createBaseline(screenshotPath: string, name: string): Promise<string> {
-    return this.visualDiff.createBaseline(screenshotPath, name);
-  }
-
-  /**
-   * Generate agent-friendly report
-   */
-  async agentReport(focus?: string[]): Promise<string> {
-    const results = await this.validate();
-    return this.formatForAgent(results, focus);
-  }
 
   /**
    * Get the browser engine for advanced capture operations
@@ -177,117 +62,737 @@ export class UISentinel {
   }
 
   /**
+   * Capture full page screenshot with smart scrolling
+   * @param url - URL to capture
+   * @param options - Capture options including device, viewport, expectations
+   * @returns Capture result with screenshot path and expectation validation
+   */
+  async captureFullPage(url: string, options: {
+    device?: 'desktop' | 'tablet' | 'mobile' | 'custom';
+    viewport?: { width: number; height: number };
+    scrollToEnd?: boolean;
+    scrollDelay?: number;
+    outputName?: string;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { FullPageScreenshotExtension } = await import('./extensions/fullpage-screenshot');
+    const extension = new FullPageScreenshotExtension();
+    extension.setOutputDir(this.config.output.directory);
+
+    const page = await this.browserEngine.createPage(url, options.device as ViewportPreset || 'desktop');
+
+    const result = await extension.capture(page, {
+      device: options.device,
+      viewport: options.viewport,
+      scrollToEnd: options.scrollToEnd,
+      scrollDelay: options.scrollDelay,
+      outputName: options.outputName,
+      expectation: options.expectations,
+    });
+
+    await page.close();
+    return result;
+  }
+
+  /**
+   * Capture full page screenshots across multiple devices
+   */
+  async captureFullPageMulti(url: string, options: {
+    devices?: ('desktop' | 'tablet' | 'mobile')[];
+    outputName?: string;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { FullPageScreenshotExtension } = await import('./extensions/fullpage-screenshot');
+    const extension = new FullPageScreenshotExtension();
+    extension.setOutputDir(this.config.output.directory);
+
+    const page = await this.browserEngine.createPage(url, 'desktop');
+
+    const result = await extension.captureMultiDevice(page, {
+      devices: options.devices || ['desktop', 'tablet', 'mobile'],
+      outputName: options.outputName,
+      expectation: options.expectations,
+    });
+
+    await page.close();
+    return result;
+  }
+
+  /**
+   * Capture view-by-view screenshots with window-wise scrolling
+   */
+  async captureViews(url: string, options: {
+    device?: 'desktop' | 'tablet' | 'mobile' | 'custom';
+    viewport?: { width: number; height: number };
+    overlap?: number;
+    scrollDelay?: number;
+    outputName?: string;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ViewportScreenshotExtension } = await import('./extensions/viewport-screenshot');
+    const extension = new ViewportScreenshotExtension();
+    extension.setOutputDir(this.config.output.directory);
+
+    const page = await this.browserEngine.createPage(url, options.device as ViewportPreset || 'desktop');
+
+    const result = await extension.captureViews(page, {
+      device: options.device,
+      viewport: options.viewport,
+      overlap: options.overlap,
+      scrollDelay: options.scrollDelay,
+      outputName: options.outputName,
+      expectation: options.expectations,
+    });
+
+    await page.close();
+    return result;
+  }
+
+  /**
+   * Capture view-by-view screenshots across multiple devices
+   */
+  async captureViewsMulti(url: string, options: {
+    devices?: ('desktop' | 'tablet' | 'mobile')[];
+    overlap?: number;
+    outputName?: string;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ViewportScreenshotExtension } = await import('./extensions/viewport-screenshot');
+    const extension = new ViewportScreenshotExtension();
+    extension.setOutputDir(this.config.output.directory);
+
+    const page = await this.browserEngine.createPage(url, 'desktop');
+
+    const result = await extension.captureViewsMultiDevice(page, {
+      devices: options.devices || ['desktop', 'tablet', 'mobile'],
+      overlap: options.overlap,
+      outputName: options.outputName,
+      expectation: options.expectations,
+    });
+
+    await page.close();
+    return result;
+  }
+
+  /**
+   * Inspect a specific element with optional action
+   */
+  async inspectElement(url: string, selector: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    action?: 'click' | 'hover' | 'focus';
+    captureViewport?: boolean;
+    captureElement?: boolean;
+    showOverlay?: boolean;
+    showInfo?: boolean;
+    showRulers?: boolean;
+    showExtensionLines?: boolean;
+    captureZoomed?: boolean;
+    zoomLevel?: number;
+    includeParent?: boolean;
+    includeChildren?: boolean;
+    includeComputedStyles?: boolean;
+    includeAttributes?: boolean;
+    autoSave?: boolean;
+    outputName?: string;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ElementInspector } = await import('./extensions/element-inspector');
+    const extension = new ElementInspector();
+    extension.setOutputDir(this.config.output.directory);
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'element-inspector');
+
+    let result: any;
+    if (options.action) {
+      result = await extension.inspectWithActionSequence(page, selector, [
+        { type: options.action, target: selector },
+      ], {
+        captureIntermediate: true,
+        captureViewport: options.captureViewport ?? true,
+        outputName: options.outputName,
+      });
+    } else {
+      result = await extension.inspect(page, selector, {
+        captureViewportScreenshot: options.captureViewport ?? true,
+        captureElementScreenshot: options.captureElement ?? true,
+        captureZoomedScreenshot: options.captureZoomed ?? false,
+        zoomLevel: options.zoomLevel ?? 2,
+        showOverlay: options.showOverlay ?? true,
+        showInfo: options.showInfo ?? true,
+        showRulers: options.showRulers ?? false,
+        showExtensionLines: options.showExtensionLines ?? true,
+        includeParent: options.includeParent ?? true,
+        includeChildren: options.includeChildren ?? true,
+        includeComputedStyles: options.includeComputedStyles ?? true,
+        includeAttributes: options.includeAttributes ?? true,
+        autoSave: options.autoSave ?? true,
+        outputName: options.outputName,
+      });
+    }
+
+    await page.close();
+    return result;
+  }
+
+  /**
+   * Analyze responsive design patterns and fixed-width elements
+   */
+  async analyzeResponsive(url: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ResponsiveDesignInspector } = await import('./extensions/responsive-design-inspector');
+    const extension = new ResponsiveDesignInspector();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'mobile');
+    await manager.injectExtension(page, 'responsive-design-inspector');
+
+    const report = await manager.executeExtension(page, 'responsive-design-inspector', 'analyzeResponsiveness');
+
+    await page.close();
+
+    if (!report.success) {
+      throw new Error(`Responsive analysis failed: ${report.error}`);
+    }
+
+    return {
+      ...report.data,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Analyze mobile UX including touch targets, readability, and WCAG compliance
+   */
+  async analyzeMobileUX(url: string, options: {
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { MobileUXAnalyzer } = await import('./extensions/mobile-ux-analyzer');
+    const extension = new MobileUXAnalyzer();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, 'mobile');
+    await manager.injectExtension(page, 'mobile-ux-analyzer');
+
+    const report = await manager.executeExtension(page, 'mobile-ux-analyzer', 'analyzeMobileUX');
+
+    await page.close();
+
+    if (!report.success) {
+      throw new Error(`Mobile UX analysis failed: ${report.error}`);
+    }
+
+    return {
+      ...report.data,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Check accessibility compliance using axe-core
+   */
+  async checkAccessibility(url: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await page.waitForLoadState('networkidle');
+
+    // Run axe-core accessibility checks
+    const result = await this.browserEngine.runAccessibilityChecks(page);
+
+    await page.close();
+
+    return {
+      standard: 'WCAG 2.1 AA',
+      ...result,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Check contrast ratios
+   */
+  async checkContrast(url: string, options: {
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ContrastChecker } = await import('./extensions/contrast-checker');
+    const extension = new ContrastChecker();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, 'desktop');
+    await manager.injectExtension(page, 'contrast-checker');
+
+    const result = await manager.executeExtension(page, 'contrast-checker', 'checkContrast');
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Contrast check failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Measure element dimensions, margins, padding with visual overlay
+   */
+  async measureElement(url: string, selector: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    showDimensions?: boolean;
+    showMargin?: boolean;
+    showPadding?: boolean;
+    showBorder?: boolean;
+    showPosition?: boolean;
+    persistent?: boolean;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ElementRuler } = await import('./extensions/element-ruler');
+    const extension = new ElementRuler();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'element-ruler');
+
+    const params = {
+      params: {
+        selector,
+        showDimensions: options.showDimensions ?? true,
+        showMargin: options.showMargin ?? true,
+        showPadding: options.showPadding ?? true,
+        showBorder: options.showBorder ?? true,
+        showPosition: options.showPosition ?? true,
+        persistent: options.persistent ?? false,
+        scrollIntoView: true,
+      }
+    };
+
+    // First call might scroll element into view
+    let result = await manager.executeExtension(page, 'element-ruler', 'measureElement', params);
+
+    // If element was scrolled, wait and call again WITHOUT scrolling to get measurements
+    if (result.success && result.data?.scrolled) {
+      await page.waitForTimeout(1000);  // Wait for smooth scroll animation
+      const paramsNoScroll = {
+        params: {
+          ...params.params,
+          scrollIntoView: false,
+        }
+      };
+      result = await manager.executeExtension(page, 'element-ruler', 'measureElement', paramsNoScroll);
+    }
+
+    // Wait for overlays to render
+    await page.waitForTimeout(300);
+
+    // Capture screenshot with measurements visible
+    const screenshotPath = path.join(
+      this.config.output.directory,
+      `measure-${selector.replace(/[^a-z0-9]/gi, '_')}-${Date.now()}.png`
+    );
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Element measurement failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      screenshot: screenshotPath,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Detect UI components on the page
+   */
+  async detectComponents(url: string, options: {
+    type?: string;
+    highlightComponents?: boolean;
+    includePosition?: boolean;
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ComponentDetector } = await import('./extensions/component-detector');
+    const extension = new ComponentDetector();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'component-detector');
+
+    let result: any;
+    if (options.type) {
+      result = await manager.executeExtension(page, 'component-detector', 'detectByType', {
+        params: {
+          type: options.type,
+        }
+      });
+    } else {
+      result = await manager.executeExtension(page, 'component-detector', 'detectComponents', {
+        params: {
+          includePosition: options.includePosition ?? false,
+          highlightComponents: options.highlightComponents ?? false,
+        }
+      });
+    }
+
+    // Capture screenshot if highlighting
+    let screenshotPath: string | undefined;
+    if (options.highlightComponents) {
+      await page.waitForTimeout(300);
+      screenshotPath = path.join(
+        this.config.output.directory,
+        `components-${Date.now()}.png`
+      );
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+    }
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Component detection failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      screenshot: screenshotPath,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Show layout grid overlay
+   */
+  async showLayoutGrid(url: string, options: {
+    gridSize?: number;
+    columns?: number;
+    gutter?: number;
+    maxWidth?: number;
+    showRuler?: boolean;
+    showCenterLines?: boolean;
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { LayoutGrid } = await import('./extensions/layout-grid');
+    const extension = new LayoutGrid();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'layout-grid');
+
+    let result: any;
+    if (options.columns) {
+      result = await manager.executeExtension(page, 'layout-grid', 'showColumnGrid', {
+        params: {
+          columns: options.columns,
+          gutter: options.gutter ?? 20,
+          maxWidth: options.maxWidth ?? 1200,
+        }
+      });
+    } else {
+      result = await manager.executeExtension(page, 'layout-grid', 'showGrid', {
+        params: {
+          gridSize: options.gridSize ?? 8,
+          showRuler: options.showRuler ?? true,
+          showCenterLines: options.showCenterLines ?? true,
+        }
+      });
+    }
+
+    // Wait for grid to render
+    await page.waitForTimeout(300);
+
+    // Capture screenshot with grid visible
+    const screenshotPath = path.join(
+      this.config.output.directory,
+      `grid-${Date.now()}.png`
+    );
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Layout grid failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      screenshot: screenshotPath,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Show responsive breakpoints indicator
+   */
+  async showBreakpoints(url: string, options: {
+    position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    showDimensions?: boolean;
+    showOrientation?: boolean;
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { BreakpointVisualizer } = await import('./extensions/breakpoint-visualizer');
+    const extension = new BreakpointVisualizer();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'breakpoint-visualizer');
+
+    const result = await manager.executeExtension(page, 'breakpoint-visualizer', 'showBreakpoints', {
+      params: {
+        position: options.position ?? 'bottom-right',
+        showDimensions: options.showDimensions ?? true,
+        showOrientation: options.showOrientation ?? true,
+      }
+    });
+
+    // Wait for indicator to render
+    await page.waitForTimeout(300);
+
+    // Capture screenshot with breakpoint indicator visible
+    const screenshotPath = path.join(
+      this.config.output.directory,
+      `breakpoints-${Date.now()}.png`
+    );
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Breakpoint visualization failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      screenshot: screenshotPath,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Analyze CSS media queries
+   */
+  async analyzeMediaQueries(url: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { MediaQueryInspector } = await import('./extensions/media-query-inspector');
+    const extension = new MediaQueryInspector();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'media-query-inspector');
+
+    const result = await manager.executeExtension(page, 'media-query-inspector', 'generateReport');
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`Media query analysis failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Visually inspect accessibility violations with overlays
+   */
+  async inspectA11y(url: string, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    showTooltips?: boolean;
+    enableHover?: boolean;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { A11yInspector } = await import('./extensions/a11y-inspector');
+    const extension = new A11yInspector();
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+
+    // First run accessibility checks to get violations
+    const violations = await this.browserEngine.runAccessibilityChecks(page);
+
+    await manager.injectExtension(page, 'a11y-inspector');
+
+    // Show violations on the page
+    const result = await manager.executeExtension(page, 'a11y-inspector', 'showViolations', {
+      params: {
+        violations: violations.violations || [],
+        showTooltips: options.showTooltips ?? true,
+        enableHover: options.enableHover ?? true,
+      }
+    });
+
+    // Wait for overlays to render
+    await page.waitForTimeout(500);
+
+    // Capture screenshot with violations highlighted
+    const screenshotPath = path.join(
+      this.config.output.directory,
+      `a11y-violations-${Date.now()}.png`
+    );
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+
+    await page.close();
+
+    if (!result.success) {
+      throw new Error(`A11y inspection failed: ${result.error}`);
+    }
+
+    return {
+      ...result.data,
+      violations,
+      screenshot: screenshotPath,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
+   * Inspect element with action sequence
+   */
+  async inspectWithSequence(url: string, selector: string, actions: Array<{
+    type: 'click' | 'hover' | 'focus' | 'type' | 'wait';
+    target?: string;
+    value?: string;
+    duration?: number;
+  }>, options: {
+    viewport?: 'mobile' | 'tablet' | 'desktop';
+    captureIntermediate?: boolean;
+    captureViewport?: boolean;
+    expectations?: string;
+  } = {}): Promise<any> {
+    if (!this.isStarted) {
+      await this.start();
+    }
+
+    const { ElementInspector } = await import('./extensions/element-inspector');
+    const extension = new ElementInspector();
+    extension.setOutputDir(this.config.output.directory);
+
+    const manager = this.browserEngine.getExtensionManager();
+    manager.register(extension);
+
+    const page = await this.browserEngine.createPage(url, options.viewport as ViewportPreset || 'desktop');
+    await manager.injectExtension(page, 'element-inspector');
+
+    const result = await extension.inspectWithActionSequence(page, selector, actions, {
+      captureIntermediate: options.captureIntermediate ?? false,
+      captureViewport: options.captureViewport ?? false,
+    });
+
+    await page.close();
+
+    return {
+      ...result,
+      expectations: options.expectations,
+    };
+  }
+
+  /**
    * Stop server and close browser
    */
   async close(): Promise<void> {
     console.log('🛑 Shutting down...');
-    
+
     await this.browserEngine.close();
     await this.serverManager.stop();
-    
+
     this.isStarted = false;
     console.log('✓ Cleanup complete');
   }
 
-  /**
-   * Generate actionable suggestions from results
-   */
-  private generateSuggestions(result: any): string[] {
-    const suggestions: string[] = [];
-
-    // Accessibility suggestions
-    if (result.accessibility) {
-      result.accessibility.violations.forEach((violation: any) => {
-        const impact = violation.impact.toUpperCase();
-        suggestions.push(
-          `[${impact}] ${violation.help} - ${violation.nodes.length} instance(s)`
-        );
-      });
-
-      if (result.accessibility.score < 80) {
-        suggestions.push(
-          `Accessibility score is ${result.accessibility.score}/100. Aim for 90+.`
-        );
-      }
-    }
-
-    // Layout suggestions
-    if (result.layout) {
-      result.layout.overflows.forEach((overflow: any) => {
-        suggestions.push(
-          `Element ${overflow.element} overflows by ${overflow.overflowX}px horizontally`
-        );
-      });
-
-      result.layout.invisibleText.forEach((text: any) => {
-        suggestions.push(`Invisible text detected on ${text.element}: ${text.reason}`);
-      });
-    }
-
-    return suggestions;
-  }
-
-  /**
-   * Find matching baseline for a screenshot
-   */
-  private findMatchingBaseline(screenshotPath: string): string | null {
-    const baselines = this.visualDiff.getBaselines();
-    const screenshotName = path.basename(screenshotPath);
-    
-    // Try to find exact match or similar name
-    return baselines.find(b => path.basename(b) === screenshotName) || baselines[0] || null;
-  }
-
-  /**
-   * Format results for AI agent consumption
-   */
-  private formatForAgent(results: ValidationResult[], focus?: string[]): string {
-    let report = '# Visual Validation Report\n\n';
-
-    results.forEach((result, index) => {
-      report += `## Page ${index + 1}: ${result.url}\n\n`;
-
-      if (!focus || focus.includes('accessibility')) {
-        if (result.accessibility) {
-          report += `### Accessibility (Score: ${result.accessibility.score}/100)\n`;
-          if (result.accessibility.violations.length > 0) {
-            report += '**Issues:**\n';
-            result.accessibility.violations.forEach(v => {
-              report += `- [${v.impact}] ${v.help}\n`;
-            });
-          } else {
-            report += '✓ No violations found\n';
-          }
-          report += '\n';
-        }
-      }
-
-      if (!focus || focus.includes('layout')) {
-        if (result.layout) {
-          report += '### Layout\n';
-          if (result.layout.overflows.length > 0) {
-            report += '**Overflows:**\n';
-            result.layout.overflows.forEach(o => {
-              report += `- ${o.element}: ${o.overflowX}px horizontal\n`;
-            });
-          } else {
-            report += '✓ No overflow issues\n';
-          }
-          report += '\n';
-        }
-      }
-
-      if (result.suggestions.length > 0) {
-        report += '### Suggestions\n';
-        result.suggestions.forEach(s => {
-          report += `- ${s}\n`;
-        });
-        report += '\n';
-      }
-    });
-
-    return report;
-  }
 
   /**
    * Merge user config with defaults
@@ -323,3 +828,18 @@ export class UISentinel {
 
 // Export for use
 export * from './types';
+export { ExtensionManager, BrowserExtension, BaseExtension } from './extensions/extension-manager';
+export { ElementInspector } from './extensions/element-inspector';
+export { A11yInspector } from './extensions/a11y-inspector';
+export { ContrastChecker } from './extensions/contrast-checker';
+export { ElementRuler } from './extensions/element-ruler';
+export { ComponentDetector } from './extensions/component-detector';
+export { LayoutGrid } from './extensions/layout-grid';
+export { BreakpointVisualizer } from './extensions/breakpoint-visualizer';
+// New responsive design extensions
+export { MediaQueryInspector } from './extensions/media-query-inspector';
+export { ResponsiveDesignInspector } from './extensions/responsive-design-inspector';
+export { MobileUXAnalyzer } from './extensions/mobile-ux-analyzer';
+// AI Agent screenshot extensions
+export { FullPageScreenshotExtension } from './extensions/fullpage-screenshot';
+export { ViewportScreenshotExtension } from './extensions/viewport-screenshot';

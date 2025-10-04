@@ -1,6 +1,6 @@
 {
   "name": "uisentinel",
-  "version": "0.1.1",
+  "version": "0.2.0-alpha.0",
   "description": "Visual validation toolkit for AI coding agents - see what you build",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,17 +16,12 @@
     "uisentinel.config.example.js"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "mkdir -p dist/templates && cp src/templates/*.md dist/templates/",
     "dev": "tsc --watch",
     "test": "jest",
     "prepublishOnly": "npm run build",
-    "example:simple": "node examples/simple-example.js",
-    "example:complete": "node examples/complete-example.js",
-    "example:advanced": "node examples/advanced-capture-demo.js",
-    "example:zoom": "node examples/zoom-capture-demo.js",
-    "demo": "cd demo && npx serve . -l 3000",
-    "validate:ui": "node dist/cli.js validate --project . --agent-mode",
-    "validate:quick": "node dist/cli.js capture --url http://localhost:3000 --a11y"
+    "demo": "cd demo && npx serve . -l 3000"
   },
   "keywords": [
     "playwright",
@@ -34,7 +29,6 @@
     "ai-agents",
     "github-copilot",
     "claude-code",
-    "cursor",
     "ui-testing",
     "screenshot",
     "accessibility",
@@ -45,7 +39,8 @@
     "testing",
     "automation",
     "ai-coding",
-    "copilot"
+    "responsive-design",
+    "element-inspector"
   ],
   "author": "mhjabreel",
   "license": "MIT",
@@ -59,24 +54,26 @@
   "homepage": "https://github.com/mhjabreel/uisentinel#readme",
   "dependencies": {
     "@playwright/test": "^1.40.0",
-    "playwright": "^1.40.0",
-    "commander": "^11.1.0",
+    "@types/prompts": "^2.4.9",
+    "axe-core": "^4.8.3",
     "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "detect-port": "^1.5.1",
     "ora": "^5.4.1",
     "pixelmatch": "^5.3.0",
+    "playwright": "^1.40.0",
     "pngjs": "^7.0.0",
+    "prompts": "^2.4.2",
     "sharp": "^0.33.0",
-    "detect-port": "^1.5.1",
-    "tree-kill": "^1.2.2",
-    "axe-core": "^4.8.3"
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.11",
     "@types/node": "^20.10.0",
     "@types/pixelmatch": "^5.2.6",
     "@types/pngjs": "^6.0.5",
-    "typescript": "^5.3.0",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.11"
+    "typescript": "^5.3.0"
   },
   "engines": {
     "node": ">=16.0.0"
