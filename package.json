@@ -1,12 +1,11 @@
 {
   "name": "uisentinel",
-  "version": "0.2.1",
+  "version": "0.2.0-alpha.0",
   "description": "Visual validation toolkit for AI coding agents - see what you build",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "uisentinel": "./dist/cli.js",
-    "uisentinel-mcp": "./dist/mcp/server.js"
+    "uisentinel": "./dist/cli.js"
   },
   "files": [
     "dist/",
@@ -17,20 +16,12 @@
     "uisentinel.config.example.js"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "mkdir -p dist/templates && cp src/templates/*.md dist/templates/",
     "dev": "tsc --watch",
     "test": "jest",
     "prepublishOnly": "npm run build",
-    "example:simple": "node examples/simple-example.js",
-    "example:complete": "node examples/complete-example.js",
-    "example:advanced": "node examples/advanced-capture-demo.js",
-    "example:zoom": "node examples/zoom-capture-demo.js",
-    "example:inspector": "node examples/inspector-demo.js",
-    "example:workflow": "node examples/integrated-workflow.js",
-    "example:capture": "node examples/capture-with-metadata-demo.js",
-    "demo": "cd demo && npx serve . -l 3000",
-    "validate:ui": "node dist/cli.js validate --project . --agent-mode",
-    "validate:quick": "node dist/cli.js capture --url http://localhost:3000 --a11y"
+    "demo": "cd demo && npx serve . -l 3000"
   },
   "keywords": [
     "playwright",
@@ -38,9 +29,6 @@
     "ai-agents",
     "github-copilot",
     "claude-code",
-    "cursor",
-    "mcp",
-    "model-context-protocol",
     "ui-testing",
     "screenshot",
     "accessibility",
@@ -51,8 +39,7 @@
     "testing",
     "automation",
     "ai-coding",
-    "copilot",
-    "browser-extensions",
+    "responsive-design",
     "element-inspector"
   ],
   "author": "mhjabreel",
@@ -66,8 +53,8 @@
   },
   "homepage": "https://github.com/mhjabreel/uisentinel#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.18.2",
     "@playwright/test": "^1.40.0",
+    "@types/prompts": "^2.4.9",
     "axe-core": "^4.8.3",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
@@ -76,6 +63,7 @@
     "pixelmatch": "^5.3.0",
     "playwright": "^1.40.0",
     "pngjs": "^7.0.0",
+    "prompts": "^2.4.2",
     "sharp": "^0.33.0",
     "tree-kill": "^1.2.2"
   },

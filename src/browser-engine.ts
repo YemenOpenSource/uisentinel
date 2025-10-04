@@ -279,7 +279,7 @@ export class BrowserEngine {
   /**
    * Run accessibility checks using axe-core
    */
-  private async runAccessibilityChecks(page: Page): Promise<AccessibilityResult> {
+  async runAccessibilityChecks(page: Page): Promise<AccessibilityResult> {
     // Inject axe-core
     await page.addScriptTag({
       content: fs.readFileSync(require.resolve('axe-core'), 'utf-8'),

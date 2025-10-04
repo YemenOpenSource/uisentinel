@@ -59,7 +59,6 @@ export class ElementInspector extends BaseExtension {
     showInfo?: boolean;
     showRulers?: boolean;
     showExtensionLines?: boolean;
-    captureScreenshot?: boolean;
     captureViewportScreenshot?: boolean;
     captureElementScreenshot?: boolean;
     captureZoomedScreenshot?: boolean;
@@ -76,7 +75,6 @@ export class ElementInspector extends BaseExtension {
       showInfo = true,
       showRulers = false,
       showExtensionLines = true,
-      captureScreenshot = true,
       captureViewportScreenshot = true,
       captureElementScreenshot = true,
       captureZoomedScreenshot = false,
@@ -145,47 +143,6 @@ export class ElementInspector extends BaseExtension {
     // Show CDP overlay if requested
     if (showOverlay) {
       await this.showCDPOverlay(page, selector, { showInfo, showRulers, showExtensionLines });
-    }
-
-    // Capture full-page screenshots
-    if (captureScreenshot) {
-      const fullPagePath = path.join(this.outputDir, `${baseName}-fullpage.png`);
-      await page.screenshot({ path: fullPagePath, fullPage: true });
-      result.screenshots.fullPage = fullPagePath;
-      result.files.fullPageScreenshot = fullPagePath;
-
-      // Add DevTools-style annotation overlay
-      if (showOverlay && result.element) {
-        try {
-          // Calculate accessibility info once
-          const accessibility = await this.calculateAccessibility(page, selector);
-
-          // Use absolute rect coordinates for full-page screenshots
-          const annotationConfig: AnnotationConfig = {
-            element: {
-              tagName: result.element.tagName,
-              rect: result.element.rect, // Use absolute page coordinates
-              styles: result.element.styles,
-              boxModel: result.element.boxModel,
-            },
-            accessibility,
-          };
-
-          // Full page with annotation
-          const annotatedPath = path.join(this.outputDir, `${baseName}-annotated.png`);
-          await this.annotator.annotateScreenshot(fullPagePath, annotationConfig, annotatedPath, false);
-          result.screenshots.annotated = annotatedPath;
-          result.files.annotatedScreenshot = annotatedPath;
-
-          // Cropped element with annotation (close-up view)
-          const annotatedElementPath = path.join(this.outputDir, `${baseName}-annotated-element.png`);
-          await this.annotator.annotateScreenshot(fullPagePath, annotationConfig, annotatedElementPath, true);
-          result.screenshots.annotatedElement = annotatedElementPath;
-          result.files.annotatedElementScreenshot = annotatedElementPath;
-        } catch (error) {
-          console.error('Failed to annotate screenshot:', error);
-        }
-      }
     }
 
     // Capture viewport (current view) screenshots
@@ -533,7 +490,6 @@ export class ElementInspector extends BaseExtension {
       try {
         const result = await this.inspect(page, selector, {
           showOverlay: false,
-          captureScreenshot: false,
           captureViewportScreenshot: captureViewportScreenshots,
           captureElementScreenshot: captureScreenshots,
           autoSave: false,
@@ -610,9 +566,9 @@ export class ElementInspector extends BaseExtension {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const baseName = outputName || `action-${action.type}-${selector.replace(/[^a-z0-9]/gi, '_')}-${timestamp}`;
 
-    // Capture before state
+    // Capture before state (viewport only)
     const beforePath = path.join(this.outputDir, `${baseName}-before.png`);
-    await page.screenshot({ path: beforePath, fullPage: true });
+    await page.screenshot({ path: beforePath, fullPage: false });
 
     // Perform action
     const actionTarget = action.target || selector;
@@ -656,14 +612,13 @@ export class ElementInspector extends BaseExtension {
     // Wait for changes
     await page.waitForTimeout(captureDelay);
 
-    // Capture after state
+    // Capture after state (viewport only)
     const afterPath = path.join(this.outputDir, `${baseName}-after.png`);
-    await page.screenshot({ path: afterPath, fullPage: true });
+    await page.screenshot({ path: afterPath, fullPage: false });
 
     // Inspect element after action
     const inspection = await this.inspect(page, selector, {
       autoSave: false,
-      captureScreenshot: false,
       outputName: baseName,
     });
 
@@ -798,7 +753,6 @@ export class ElementInspector extends BaseExtension {
     // Inspect final element state
     const finalInspection = await this.inspect(page, selector, {
       autoSave: false,
-      captureScreenshot: false,
       captureViewportScreenshot: false,
       outputName: baseName,
     });

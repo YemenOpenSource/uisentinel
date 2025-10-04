@@ -21,6 +21,168 @@ export class ResponsiveDesignInspector extends BaseExtension {
   getBrowserCode(): string {
     return this.createBrowserAPI({
       /**
+       * Get source CSS value for a property (not computed)
+       * Checks inline styles and stylesheets
+       */
+      getSourceStyleValue: function(element: HTMLElement, property: string): string | null {
+        // Check inline style first
+        const inlineValue = (element.style as any)[property];
+        if (inlineValue) return inlineValue;
+
+        // Parse stylesheets
+        try {
+          const sheets = Array.from(document.styleSheets);
+          
+          for (const sheet of sheets) {
+            try {
+              const rules = Array.from(sheet.cssRules || sheet.rules || []);
+              
+              for (const rule of rules) {
+                if ((rule as any).style) {
+                  const cssRule = rule as CSSStyleRule;
+                  
+                  // Check if this rule applies to our element
+                  try {
+                    if (element.matches(cssRule.selectorText)) {
+                      const value = cssRule.style.getPropertyValue(property);
+                      if (value) return value;
+                    }
+                  } catch (e) {
+                    // Invalid selector, skip
+                  }
+                }
+              }
+            } catch (e) {
+              // Cross-origin stylesheet, skip
+            }
+          }
+        } catch (e) {
+          // Error parsing stylesheets
+        }
+
+        return null;
+      },
+
+      /**
+       * Check if element uses responsive width pattern
+       */
+      isResponsiveWidth: function(element: HTMLElement): { isResponsive: boolean; reason: string; pattern?: string } {
+        const computed = window.getComputedStyle(element);
+        const computedWidth = computed.width;
+        const computedMaxWidth = computed.maxWidth;
+        
+        // Get source CSS values (not computed)
+        const sourceWidth = this.getSourceStyleValue(element, 'width');
+        const sourceMaxWidth = this.getSourceStyleValue(element, 'max-width');
+        const sourceMinWidth = this.getSourceStyleValue(element, 'min-width');
+
+        // Pattern 1: max-width + width: 100% (responsive)
+        if (sourceMaxWidth && sourceMaxWidth !== 'none' && 
+            sourceWidth && (sourceWidth === '100%' || sourceWidth === 'auto')) {
+          return { 
+            isResponsive: true, 
+            reason: 'Uses max-width with flexible width',
+            pattern: `max-width: ${sourceMaxWidth}; width: ${sourceWidth}`
+          };
+        }
+
+        // Pattern 2: width in percentage/vw (responsive)
+        if (sourceWidth && (sourceWidth.includes('%') || sourceWidth.includes('vw') || sourceWidth === 'auto')) {
+          return { 
+            isResponsive: true, 
+            reason: 'Uses relative width unit',
+            pattern: `width: ${sourceWidth}`
+          };
+        }
+
+        // Pattern 3: No explicit width set (defaults to auto, responsive)
+        if (!sourceWidth || sourceWidth === 'auto') {
+          // But check if it has problematic min-width
+          if (sourceMinWidth && sourceMinWidth.includes('px')) {
+            const minWidthPx = parseInt(sourceMinWidth);
+            if (minWidthPx > window.innerWidth) {
+              return {
+                isResponsive: false,
+                reason: `min-width: ${sourceMinWidth} exceeds viewport`,
+                pattern: `min-width: ${sourceMinWidth}`
+              };
+            }
+          }
+          return { 
+            isResponsive: true, 
+            reason: 'No fixed width set',
+            pattern: 'width: auto (default)'
+          };
+        }
+
+        // Pattern 4: Fixed pixel width without max-width (non-responsive)
+        if (sourceWidth && sourceWidth.includes('px')) {
+          const widthPx = parseInt(sourceWidth);
+          
+          // If it's a small fixed width, it's okay
+          if (widthPx < 300) {
+            return { 
+              isResponsive: true, 
+              reason: 'Small fixed width acceptable',
+              pattern: `width: ${sourceWidth}`
+            };
+          }
+          
+          // Large fixed width is problematic
+          return {
+            isResponsive: false,
+            reason: `Fixed width ${sourceWidth} without max-width`,
+            pattern: `width: ${sourceWidth}`
+          };
+        }
+
+        // Pattern 5: Uses rem/em (responsive)
+        if (sourceWidth && (sourceWidth.includes('rem') || sourceWidth.includes('em'))) {
+          return { 
+            isResponsive: true, 
+            reason: 'Uses relative em/rem units',
+            pattern: `width: ${sourceWidth}`
+          };
+        }
+
+        // Default: check computed width
+        const rect = element.getBoundingClientRect();
+        if (rect.width <= window.innerWidth) {
+          return { 
+            isResponsive: true, 
+            reason: 'Fits within viewport',
+            pattern: 'width: (fits)'
+          };
+        }
+
+        return {
+          isResponsive: false,
+          reason: 'Exceeds viewport width',
+          pattern: computedWidth
+        };
+      },
+
+      /**
+       * Check if element is in a scrollable container
+       */
+      isInScrollableContainer: function(element: HTMLElement): boolean {
+        let parent = element.parentElement;
+        
+        while (parent && parent !== document.body) {
+          const styles = window.getComputedStyle(parent);
+          const overflowX = styles.overflowX;
+          
+          if (overflowX === 'auto' || overflowX === 'scroll') {
+            return true;
+          }
+          
+          parent = parent.parentElement;
+        }
+        
+        return false;
+      },
+
+      /**
        * Scan for fixed-width elements
        */
       scanFixedWidthElements: function(params: any = {}) {
@@ -42,37 +204,27 @@ export class ResponsiveDesignInspector extends BaseExtension {
               continue;
             }
 
-            const styles = window.getComputedStyle(element);
-            const width = styles.width;
-            const minWidthStyle = styles.minWidth;
-            const maxWidthStyle = styles.maxWidth;
-
-            // Check for fixed pixel widths
-            const hasFixedWidth = width && width.match(/^\d+px$/) && parseInt(width) >= minWidth;
-            const hasFixedMinWidth = minWidthStyle && minWidthStyle.match(/^\d+px$/) && parseInt(minWidthStyle) >= minWidth;
-
-            if (hasFixedWidth || hasFixedMinWidth) {
-              const rect = element.getBoundingClientRect();
+            // Check if width is responsive using source CSS
+            const responsiveCheck = this.isResponsiveWidth(element);
+            
+            // Only flag if non-responsive and significant size
+            const rect = element.getBoundingClientRect();
+            if (!responsiveCheck.isResponsive && rect.width >= minWidth) {
               const selector = this.getElementSelector(element);
+              const computed = window.getComputedStyle(element);
 
-              // Determine suggested fix
-              let suggestedFix = '';
+              // Determine priority and suggested fix
               let priority: 'critical' | 'high' | 'medium' = 'medium';
+              let suggestedFix = '';
 
-              if (hasFixedWidth) {
-                const widthValue = parseInt(width);
-                if (widthValue > window.innerWidth) {
-                  priority = 'critical';
-                  suggestedFix = `Replace "width: ${width}" with "max-width: 100%; width: auto;"`;
-                } else if (widthValue > 1000) {
-                  priority = 'high';
-                  suggestedFix = `Replace "width: ${width}" with "max-width: ${width}; width: 100%;"`;
-                } else {
-                  suggestedFix = `Consider replacing "width: ${width}" with flexible units or max-width`;
-                }
-              } else if (hasFixedMinWidth) {
+              if (rect.width > window.innerWidth) {
+                priority = 'critical';
+                suggestedFix = `Add "max-width: 100%; width: auto;" - ${responsiveCheck.reason}`;
+              } else if (rect.width > 1000) {
                 priority = 'high';
-                suggestedFix = `"min-width: ${minWidthStyle}" prevents element from shrinking on small screens`;
+                suggestedFix = `Use "max-width: ${rect.width}px; width: 100%;" - ${responsiveCheck.reason}`;
+              } else {
+                suggestedFix = responsiveCheck.reason;
               }
 
               fixedWidthElements.push({
@@ -80,13 +232,12 @@ export class ResponsiveDesignInspector extends BaseExtension {
                 tagName: element.tagName,
                 id: element.id || null,
                 className: element.className || null,
-                width: width,
-                minWidth: minWidthStyle,
-                maxWidth: maxWidthStyle,
+                sourceWidth: responsiveCheck.pattern,
                 computedWidth: rect.width,
                 exceedsViewport: rect.width > window.innerWidth,
                 priority,
                 suggestedFix,
+                reason: responsiveCheck.reason,
                 position: {
                   top: rect.top + window.pageYOffset,
                   left: rect.left + window.pageXOffset
@@ -135,32 +286,53 @@ export class ResponsiveDesignInspector extends BaseExtension {
 
             const styles = window.getComputedStyle(element);
             const display = styles.display;
-            const position = styles.position;
-            const width = styles.width;
+            
+            // Check responsive width using source CSS
+            const responsiveCheck = this.isResponsiveWidth(element);
 
             // Detect layout type
             let layoutType = 'block';
-            let isResponsive = true;
+            let isResponsive = responsiveCheck.isResponsive;
             let suggestion = '';
 
             if (display.includes('flex')) {
               layoutType = 'flex';
               const flexWrap = styles.flexWrap;
+              
+              // Only flag nowrap if it has many children AND they're wide
               if (flexWrap === 'nowrap' && element.children.length > 3) {
-                isResponsive = false;
-                suggestion = 'Add "flex-wrap: wrap;" to allow items to wrap on small screens';
+                let totalChildWidth = 0;
+                Array.from(element.children).forEach((child: any) => {
+                  totalChildWidth += child.offsetWidth;
+                });
+                
+                // If children overflow, suggest wrap
+                if (totalChildWidth > element.offsetWidth) {
+                  isResponsive = false;
+                  suggestion = 'Add "flex-wrap: wrap;" to allow items to wrap on small screens';
+                }
               }
             } else if (display.includes('grid')) {
               layoutType = 'grid';
               const gridColumns = styles.gridTemplateColumns;
-              if (gridColumns && !gridColumns.includes('fr') && !gridColumns.includes('minmax')) {
+              
+              // Only flag if using only fixed units
+              if (gridColumns && !gridColumns.includes('fr') && !gridColumns.includes('minmax') && 
+                  !gridColumns.includes('%') && !gridColumns.includes('auto')) {
                 isResponsive = false;
-                suggestion = 'Use "fr" units or "minmax()" for responsive grid columns';
+                suggestion = 'Use "fr" units, "minmax()", or "auto" for responsive grid columns';
               }
             } else if (display === 'table' || element.tagName === 'TABLE') {
               layoutType = 'table';
-              isResponsive = false;
-              suggestion = 'Consider using flexbox or grid for better mobile responsiveness';
+              
+              // Tables are only problematic if not in overflow container
+              if (!this.isInScrollableContainer(element)) {
+                isResponsive = false;
+                suggestion = 'Wrap in <div style="overflow-x: auto;"> or use flexbox/grid instead';
+              } else {
+                isResponsive = true; // Tables in scroll containers are fine
+                suggestion = 'Table in scrollable container - OK for mobile';
+              }
             } else if (display === 'inline-block') {
               layoutType = 'inline-block';
               if (element.children.length > 2) {
@@ -169,11 +341,11 @@ export class ResponsiveDesignInspector extends BaseExtension {
               }
             }
 
-            // Check for fixed widths
-            if (width && width.match(/^\d+px$/)) {
+            // Override with width check
+            if (!responsiveCheck.isResponsive) {
               isResponsive = false;
               if (!suggestion) {
-                suggestion = `Fixed width (${width}) should use relative units or max-width`;
+                suggestion = responsiveCheck.reason;
               }
             }
 
@@ -216,7 +388,7 @@ export class ResponsiveDesignInspector extends BaseExtension {
       },
 
       /**
-       * Analyze responsive unit usage
+       * Analyze responsive unit usage (from source CSS, not computed)
        */
       analyzeUnitUsage: function() {
         try {
@@ -231,31 +403,62 @@ export class ResponsiveDesignInspector extends BaseExtension {
             auto: 0
           };
 
-          const allElements = document.querySelectorAll('*');
-
-          for (const el of Array.from(allElements)) {
-            const element = el as HTMLElement;
-            if (element.offsetParent === null) continue;
-
-            const styles = window.getComputedStyle(element);
-            
-            // Check width
-            const width = styles.width;
-            if (width) {
-              if (width.includes('px')) units.px++;
-              else if (width.includes('%')) units.percent++;
-              else if (width.includes('rem')) units.rem++;
-              else if (width.includes('em')) units.em++;
-              else if (width.includes('vw')) units.vw++;
-              else if (width === 'auto') units.auto++;
-            }
-
-            // Check font size
-            const fontSize = styles.fontSize;
-            if (fontSize) {
-              if (fontSize.includes('px')) units.px++;
-              else if (fontSize.includes('rem')) units.rem++;
-              else if (fontSize.includes('em')) units.em++;
+          // Parse stylesheets for actual CSS values
+          const sheets = Array.from(document.styleSheets);
+          
+          for (const sheet of sheets) {
+            try {
+              const rules = Array.from(sheet.cssRules || sheet.rules || []);
+              
+              for (const rule of rules) {
+                if ((rule as any).style) {
+                  const cssRule = rule as CSSStyleRule;
+                  const style = cssRule.style;
+                  
+                  // Check width property
+                  const width = style.getPropertyValue('width');
+                  if (width) {
+                    if (width.includes('px')) units.px++;
+                    else if (width.includes('%')) units.percent++;
+                    else if (width.includes('rem')) units.rem++;
+                    else if (width.includes('em')) units.em++;
+                    else if (width.includes('vw')) units.vw++;
+                    else if (width.includes('vh')) units.vh++;
+                    else if (width === 'auto') units.auto++;
+                  }
+                  
+                  // Check max-width (responsive pattern)
+                  const maxWidth = style.getPropertyValue('max-width');
+                  if (maxWidth && maxWidth !== 'none') {
+                    if (maxWidth.includes('px')) units.px++;
+                    else if (maxWidth.includes('%')) units.percent++;
+                    else if (maxWidth.includes('rem')) units.rem++;
+                    else if (maxWidth.includes('em')) units.em++;
+                    else if (maxWidth.includes('vw')) units.vw++;
+                  }
+                  
+                  // Check font-size
+                  const fontSize = style.getPropertyValue('font-size');
+                  if (fontSize) {
+                    if (fontSize.includes('px')) units.px++;
+                    else if (fontSize.includes('rem')) units.rem++;
+                    else if (fontSize.includes('em')) units.em++;
+                  }
+                  
+                  // Check padding/margin (important for spacing)
+                  ['padding', 'margin', 'padding-top', 'padding-bottom', 'margin-top', 'margin-bottom'].forEach(prop => {
+                    const value = style.getPropertyValue(prop);
+                    if (value) {
+                      if (value.includes('px')) units.px++;
+                      else if (value.includes('%')) units.percent++;
+                      else if (value.includes('rem')) units.rem++;
+                      else if (value.includes('em')) units.em++;
+                    }
+                  });
+                }
+              }
+            } catch (e) {
+              // Cross-origin stylesheet, skip
             }
           }
 
@@ -268,15 +471,15 @@ export class ResponsiveDesignInspector extends BaseExtension {
 
           // Determine if approach is responsive
           const responsiveUnits = units.percent + units.rem + units.em + units.vw + units.vh + units.fr + units.auto;
-          const responsiveScore = total > 0 ? Math.round((responsiveUnits / (total as number)) * 100) : 0;
+          const responsiveScore = total > 0 ? Math.round((responsiveUnits / (total as number)) * 100) : 100;
 
           return {
             success: true,
             units,
             percentages,
             responsiveScore,
-            isResponsive: responsiveScore >= 50,
-            recommendation: responsiveScore < 50 
+            isResponsive: responsiveScore >= 40, // Lower threshold since some px is OK
+            recommendation: responsiveScore < 40 
               ? 'Use more relative units (%, rem, vw) instead of fixed pixels for better responsiveness'
               : 'Good use of responsive units'
           };
@@ -306,8 +509,20 @@ export class ResponsiveDesignInspector extends BaseExtension {
             
             // Check if element extends beyond viewport
             if (rect.width > viewportWidth + 10) { // +10px tolerance
+              
+              // Skip if element is in a scrollable container (intentional overflow)
+              if (this.isInScrollableContainer(element)) {
+                continue;
+              }
+
               const styles = window.getComputedStyle(element);
               const selector = this.getElementSelector(element);
+              
+              // Check if element itself is scrollable
+              const overflowX = styles.overflowX;
+              if (overflowX === 'auto' || overflowX === 'scroll' || overflowX === 'hidden') {
+                continue; // This overflow is handled/intentional
+              }
 
               overflowingElements.push({
                 selector,
@@ -317,7 +532,7 @@ export class ResponsiveDesignInspector extends BaseExtension {
                 overflow: rect.width - viewportWidth,
                 computedWidth: styles.width,
                 minWidth: styles.minWidth,
-                suggestedFix: `Add "max-width: 100%;" or "box-sizing: border-box;" to prevent overflow`,
+                suggestedFix: `Add "max-width: 100%;" or wrap in container with "overflow-x: auto;"`,
                 position: {
                   top: rect.top + window.pageYOffset,
                   left: rect.left + window.pageXOffset
@@ -351,46 +566,58 @@ export class ResponsiveDesignInspector extends BaseExtension {
           const units = this.analyzeUnitUsage();
           const overflow = this.detectViewportOverflow();
 
-          // Calculate responsive score (0-100)
-          let score = 100;
+          // Calculate responsive score (0-100) - NEW BALANCED FORMULA
+          let score = 70; // Start at 70 (neutral)
 
-          // Deduct for fixed widths
-          if (fixedWidths.success) {
-            score -= fixedWidths.criticalCount * 15;
-            score -= fixedWidths.highCount * 10;
-            score -= (fixedWidths.count - fixedWidths.criticalCount - fixedWidths.highCount) * 5;
+          // Add points for good practices
+          if (units.success && units.responsiveScore >= 50) {
+            score += 15; // Bonus for using responsive units
+          } else if (units.success && units.responsiveScore >= 30) {
+            score += 10; // Partial credit
           }
 
-          // Deduct for non-responsive layouts
+          // Count responsive layouts as positive
           if (layouts.success && layouts.summary) {
-            score -= layouts.summary.nonResponsive * 10;
-            score -= layouts.summary.table * 5;
+            const responsiveLayouts = layouts.layouts.filter((l: any) => l.isResponsive).length;
+            score += Math.min(15, responsiveLayouts * 2); // Up to +15 for responsive layouts
           }
 
-          // Factor in unit usage
-          if (units.success) {
-            score -= (100 - units.responsiveScore) * 0.3;
+          // Deduct for actual issues (reduced penalties)
+          if (fixedWidths.success) {
+            score -= fixedWidths.criticalCount * 10; // Reduced from 15
+            score -= fixedWidths.highCount * 5;      // Reduced from 10
+            score -= (fixedWidths.count - fixedWidths.criticalCount - fixedWidths.highCount) * 2; // Reduced from 5
           }
 
-          // Deduct for overflow
+          // Deduct for non-responsive layouts (reduced)
+          if (layouts.success && layouts.summary) {
+            score -= layouts.summary.nonResponsive * 3; // Reduced from 10
+          }
+
+          // Deduct for overflow (only real overflow)
           if (overflow.success && overflow.hasOverflow) {
-            score -= overflow.count * 10;
+            score -= overflow.count * 5; // Reduced from 10
           }
 
           score = Math.max(0, Math.min(100, Math.round(score)));
 
+          // Determine overall responsiveness
+          const isResponsive = score >= 60;
+
           return {
             success: true,
             score,
-            isResponsive: score >= 70,
+            isResponsive,
             fixedWidthElements: fixedWidths.success ? fixedWidths.elements : [],
             layoutIssues: layouts.success ? layouts.layouts.filter((l: any) => !l.isResponsive) : [],
+            layoutSuccesses: layouts.success ? layouts.layouts.filter((l: any) => l.isResponsive) : [],
             unitAnalysis: units.success ? units : null,
             overflowElements: overflow.success ? overflow.elements : [],
             summary: {
               totalIssues: (fixedWidths.count || 0) + (layouts.summary?.nonResponsive || 0) + (overflow.count || 0),
               criticalIssues: fixedWidths.criticalCount || 0,
-              highIssues: fixedWidths.highCount || 0
+              highIssues: fixedWidths.highCount || 0,
+              responsivePatterns: layouts.success ? layouts.layouts.filter((l: any) => l.isResponsive).length : 0
             },
             recommendations: this.generateRecommendations(fixedWidths, layouts, units, overflow)
           };
